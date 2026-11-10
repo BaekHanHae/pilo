@@ -26,6 +26,8 @@ def validate_ai_scope(
     expected_resource_type: str | None = None,
     expected_resource_id: str | None = None,
     expected_resource_hash: str | None = None,
+    expected_context_hash: str | None = None,
+    expected_policy_version: str | None = None,
 ) -> None:
     """Fail closed on missing, revoked, cross-project or unapproved scope."""
     values = (project_id, execution_id, step_id)
@@ -60,7 +62,8 @@ def validate_ai_scope(
     if side_effecting and any(
         not isinstance(value, str) or not value.strip()
         for value in (expected_action, expected_resource_type, expected_resource_id,
-                      expected_resource_hash)
+                      expected_resource_hash, expected_context_hash,
+                      expected_policy_version)
     ):
         raise ScopeMismatch("Side effects require exact action/resource/hash binding")
 
@@ -78,9 +81,12 @@ def validate_ai_scope(
                  AND r.resource_type = ?
                  AND r.resource_id = ?
                  AND r.resource_hash = ?
+                 AND r.approval_context_hash = ?
+                 AND r.policy_version_ref = ?
                  AND (r.expires_at IS NULL OR r.expires_at > strftime('%Y-%m-%dT%H:%M:%fZ','now'))""",
             (approval_id, execution_id, project_id, expected_action,
-             expected_resource_type, expected_resource_id, expected_resource_hash),
+             expected_resource_type, expected_resource_id, expected_resource_hash,
+             expected_context_hash, expected_policy_version),
         ).fetchone()
         if approval is None:
             raise ScopeMismatch("Approval is missing, expired, revoked or out of scope")
