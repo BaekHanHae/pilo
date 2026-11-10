@@ -51,7 +51,7 @@ class FinalizeTests(unittest.TestCase):
             INSERT INTO Execution VALUES('e','p','PROJECT');
             INSERT INTO ExecutionStep VALUES('e','s');
             INSERT INTO AIAttemptRecord VALUES
-                ('a','p','e','s','RUNNING',4,1,NULL,'t');
+                ('a','p','e','s','RUNNING',4,1,NULL,'READ_ONLY',NULL,NULL,'t');
         """)
         self.core = FakeCore(self.db)
         self.tempdir = tempfile.TemporaryDirectory()
@@ -110,6 +110,18 @@ class FinalizeTests(unittest.TestCase):
     def test_invalid_digest(self):
         with self.assertRaises(FinalizeRejected):
             self.run_finalize(evidence_sha256="bad")
+
+    def test_unrecognized_effect_class_fails_closed(self):
+        self.db.execute("UPDATE AIAttemptRecord SET effect_class='INVALID'")
+        with self.assertRaises(FinalizeRejected):
+            self.run_finalize()
+        self.assertEqual(self.phase(), ("RUNNING", 1))
+
+    def test_side_effect_requires_binding(self):
+        self.db.execute("UPDATE AIAttemptRecord SET effect_class='WORKTREE_WRITE'")
+        with self.assertRaises(FinalizeRejected):
+            self.run_finalize()
+        self.assertEqual(self.phase(), ("RUNNING", 1))
 
     def test_permission_denial(self):
         with self.assertRaises(PermissionError):
