@@ -1,6 +1,8 @@
 """SQLite transaction tests for dormant AI attempt finalization."""
 import contextlib
 import sqlite3
+import tempfile
+from pilo_core.storage import ContentStore
 import unittest
 
 from pilo_core.ai_finalize import FinalizeRejected, finalize_ai_attempt
@@ -52,16 +54,20 @@ class FinalizeTests(unittest.TestCase):
                 ('a','p','e','s','RUNNING',4,1,NULL,'t');
         """)
         self.core = FakeCore(self.db)
+        self.tempdir = tempfile.TemporaryDirectory()
+        self.store = ContentStore(self.tempdir.name)
+        self.digest = self.store.put(b"verified result evidence")
         self.kw = dict(
             actor="operator", attempt_id="a", project_id="p",
             execution_id="e", step_id="s", fencing_token=4,
             expected_revision=1, result_phase="COMPLETED",
-            evidence_ref="cas:proof", evidence_sha256="a"*64, now="t2",
-            evidence_verified=True,
+            evidence_ref=self.digest, evidence_sha256=self.digest, now="t2",
+            content_store=self.store,
         )
 
     def tearDown(self):
         self.db.close()
+        self.tempdir.cleanup()
 
     def run_finalize(self, **updates):
         finalize_ai_attempt(self.core, **(self.kw | updates))
@@ -93,9 +99,13 @@ class FinalizeTests(unittest.TestCase):
                           evidence_ref=None, evidence_sha256=None)
         self.assertEqual(self.phase(), ("UNCERTAIN", 2))
 
-    def test_unverified_evidence_rejected(self):
+    def test_missing_core_store_rejected(self):
         with self.assertRaises(FinalizeRejected):
-            self.run_finalize(evidence_verified=False)
+            self.run_finalize(content_store=None)
+
+    def test_tampered_evidence_rejected(self):
+        with self.assertRaises(FinalizeRejected):
+            self.run_finalize(evidence_sha256="a" * 64)
 
     def test_invalid_digest(self):
         with self.assertRaises(FinalizeRejected):
