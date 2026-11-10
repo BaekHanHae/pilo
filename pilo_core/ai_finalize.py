@@ -7,6 +7,8 @@ from __future__ import annotations
 import re
 
 from .ai_scope import validate_ai_scope
+from .ai_evidence import verify_evidence, EvidenceRejected
+from .storage import ContentStore
 
 
 class FinalizeRejected(RuntimeError):
@@ -30,14 +32,13 @@ def finalize_ai_attempt(
     evidence_ref: str | None,
     evidence_sha256: str | None,
     now: str,
-    evidence_verified: bool = False,
+    content_store: ContentStore | None = None,
 ) -> None:
     """Finalize with fence, revision, identity, permission and audit checks.
 
-    Caller must independently validate evidence bytes in Core CAS and
-    workspace effects before declaring COMPLETED or FAILED. The explicit
-    evidence_verified flag is a temporary internal contract, NOT proof.
-    Do not expose it to adapters or untrusted callers. UNCERTAIN is
+    Evidence is read directly from a Core-owned ContentStore, never from an
+    adapter-provided reader or boolean assertion. Workspace effects and
+    provenance still require separate verification. UNCERTAIN is
     intentionally permitted without evidence and blocks automatic retries.
     """
     if not all(isinstance(v, str) and v.strip() for v in (
@@ -57,8 +58,15 @@ def finalize_ai_attempt(
     ):
         raise FinalizeRejected("Verified result requires evidence reference and digest")
 
-    if result_phase != "UNCERTAIN" and evidence_verified is not True:
-        raise FinalizeRejected("Evidence must be verified by Core before finalization")
+    if result_phase != "UNCERTAIN":
+        if not isinstance(content_store, ContentStore):
+            raise FinalizeRejected("Core ContentStore required for finalization")
+        if evidence_ref != evidence_sha256:
+            raise FinalizeRejected("Evidence reference must be the CAS digest")
+        try:
+            verify_evidence(evidence_ref, evidence_sha256, content_store.get)
+        except (EvidenceRejected, OSError, ValueError) as exc:
+            raise FinalizeRejected("CAS evidence verification failed") from exc
 
     with core.connection(write=True) as db:
         core._authorize(db, actor, "ai.run", project_id)
