@@ -30,11 +30,14 @@ def finalize_ai_attempt(
     evidence_ref: str | None,
     evidence_sha256: str | None,
     now: str,
+    evidence_verified: bool = False,
 ) -> None:
     """Finalize with fence, revision, identity, permission and audit checks.
 
     Caller must independently validate evidence bytes in Core CAS and
-    workspace effects before declaring COMPLETED or FAILED. UNCERTAIN is
+    workspace effects before declaring COMPLETED or FAILED. The explicit
+    evidence_verified flag is a temporary internal contract, NOT proof.
+    Do not expose it to adapters or untrusted callers. UNCERTAIN is
     intentionally permitted without evidence and blocks automatic retries.
     """
     if not all(isinstance(v, str) and v.strip() for v in (
@@ -53,6 +56,9 @@ def finalize_ai_attempt(
         or _SHA256.fullmatch(evidence_sha256) is None
     ):
         raise FinalizeRejected("Verified result requires evidence reference and digest")
+
+    if result_phase != "UNCERTAIN" and evidence_verified is not True:
+        raise FinalizeRejected("Evidence must be verified by Core before finalization")
 
     with core.connection(write=True) as db:
         core._authorize(db, actor, "ai.run", project_id)
