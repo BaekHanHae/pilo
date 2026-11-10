@@ -13,16 +13,20 @@ class AIScopeTests(unittest.TestCase):
         CREATE TABLE ExecutionStep(execution_id TEXT, step_id TEXT);
         CREATE TABLE Checkpoint(checkpoint_id TEXT, project_id TEXT);
         CREATE TABLE ApprovalRequest(approval_id TEXT, execution_id TEXT,
-            status TEXT, expires_at TEXT);
+            status TEXT, expires_at TEXT, action TEXT, resource_type TEXT,
+            resource_id TEXT, resource_hash TEXT);
         CREATE TABLE ApprovalGrant(approval_id TEXT, project_id TEXT, revoked_at TEXT);
         INSERT INTO Execution VALUES ('e','p','PROJECT');
         INSERT INTO ExecutionStep VALUES ('e','s');
         INSERT INTO Checkpoint VALUES ('c','p');
-        INSERT INTO ApprovalRequest VALUES ('a','e','APPROVED',NULL);
+        INSERT INTO ApprovalRequest VALUES ('a','e','APPROVED',NULL,
+            'ai.execute','step','s','sha256:abc');
         INSERT INTO ApprovalGrant VALUES ('a','p',NULL);
         """)
         self.args = dict(project_id="p", execution_id="e", step_id="s",
-                         approval_id="a", checkpoint_id="c", side_effecting=True)
+                         approval_id="a", checkpoint_id="c", side_effecting=True,
+                         expected_action="ai.execute", expected_resource_type="step",
+                         expected_resource_id="s", expected_resource_hash="sha256:abc")
 
     def tearDown(self):
         self.db.close()
@@ -64,6 +68,22 @@ class AIScopeTests(unittest.TestCase):
         self.db.execute("UPDATE ApprovalRequest SET expires_at='2000-01-01T00:00:00.000Z'")
         with self.assertRaises(ScopeMismatch):
             self.validate()
+
+    def test_wrong_action(self):
+        with self.assertRaises(ScopeMismatch):
+            self.validate(expected_action='other')
+
+    def test_wrong_resource(self):
+        with self.assertRaises(ScopeMismatch):
+            self.validate(expected_resource_id='other')
+
+    def test_wrong_hash(self):
+        with self.assertRaises(ScopeMismatch):
+            self.validate(expected_resource_hash='sha256:other')
+
+    def test_missing_binding(self):
+        with self.assertRaises(ScopeMismatch):
+            self.validate(expected_action=None)
 
     def test_read_only_without_approval(self):
         self.assertIsNone(self.validate(
