@@ -1,6 +1,6 @@
 # PILO public implementation specification
 
-Version: 0.3.1 pre-release candidate. Language: English only.
+Version: 0.3.1 pre-release. Language: English only.
 
 This is the public contract for the code in this repository. Internal historical specifications and private design conversations are not distributed. Their version numbers do not represent this package's release number.
 
@@ -36,4 +36,4 @@ Diagnostics use predefined profiles; ErrorVault stores redacted occurrences and 
 
 ## Release boundaries
 
-POSIX filesystem features are required. This candidate supports development on macOS/Linux; local evidence covers macOS. Windows, HTTP/OAuth transport, unrestricted AI/HYBRID scheduling, persistent approximate vector indexing, media semantic graph extraction and production load certification are outside this release.
+POSIX filesystem features are required. This release is tested on macOS/Linux with Python 3.11/3.14. Windows, HTTP/OAuth transport, unrestricted AI/HYBRID scheduling, persistent approximate vector indexing, media semantic graph extraction and production load certification are outside this release.

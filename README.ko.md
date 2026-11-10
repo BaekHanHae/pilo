@@ -6,7 +6,7 @@
 
 PILO는 AI 코딩 도구가 프로젝트 자료를 찾고, 실제로 읽은 내용을 기록하도록 돕습니다. 프로젝트별 권한, 변경되지 않는 문맥 Snapshot, 선택적인 로컬 분석을 하나의 Python 앱으로 제공합니다.
 
-**현재 상태:** 0.3.1 공개 전 시험 버전입니다. 로컬 자동 테스트를 수행했으며, 모든 환경의 안정성이나 검색 정확성을 보장하지 않습니다. GitHub 공개 CI는 아직 실행하지 않았습니다.
+**현재 상태:** 0.3.1 사전 공개 버전입니다. 정해진 범위의 자동 검증을 수행하며, 모든 환경의 안정성이나 검색 정확성을 보장하지 않습니다. [실제 CI 결과](https://github.com/BaekHanHae/pilo/actions/workflows/ci.yml)를 확인하세요.
 
 ## 무엇을 할 수 있나요?
 
@@ -20,9 +20,16 @@ PILO는 AI 코딩 도구가 프로젝트 자료를 찾고, 실제로 읽은 내�
 
 ## 빠른 시작
 
-Python 3.11 이상, Git, JSON 함수와 FTS5 trigram을 지원하는 SQLite 3.37 이상이 필요합니다. macOS 또는 Linux를 대상으로 하며, 로컬 검증은 macOS에서 수행했습니다. Linux CI는 준비 상태이고 Windows는 현재 지원하지 않습니다.
+Python 3.11 이상, Git, JSON 함수와 FTS5 trigram을 지원하는 SQLite 3.37 이상이 필요합니다. macOS 또는 Linux를 대상으로 하며, 원격 CI에서 macOS·Linux와 Python 3.11·3.14를 검증합니다. Windows는 현재 지원하지 않습니다.
 
-압축을 푼 소스 폴더에서 실행하세요.
+소스를 내려받고 해당 폴더로 이동합니다.
+
+```sh
+git clone https://github.com/BaekHanHae/pilo.git
+cd pilo
+```
+
+이어서 실행하세요.
 
 ```sh
 python3 -m venv .venv

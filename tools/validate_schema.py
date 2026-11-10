@@ -454,7 +454,7 @@ def assert_equal(a,b):
     assert a==b,(a,b)
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--database',type=pathlib.Path);args=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--database',type=pathlib.Path);p.add_argument('--report',type=pathlib.Path);args=p.parse_args()
     if args.database:
         db=connect(args.database)
         try:print('Applied' if migrate(db) else 'Already applied (checksum verified)')
@@ -462,6 +462,8 @@ def main():
         return
     suite()
     report={'python':platform.python_version(),'sqlite':sqlite3.sqlite_version,'platform':platform.platform(),'migration_sha256':hashlib.sha256(SQL.read_bytes()).hexdigest(),'results':RESULTS}
-    (ROOT/'test_results.json').write_text(json.dumps(report,indent=2)+'\n')
+    if args.report:
+        args.report.parent.mkdir(parents=True,exist_ok=True)
+        args.report.write_text(json.dumps(report,indent=2)+'\n')
     print(f'{len(RESULTS)} tests passed; integrity_check=ok; foreign_key_check=[]')
 if __name__=='__main__':main()

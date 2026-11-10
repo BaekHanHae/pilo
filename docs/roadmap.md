@@ -15,9 +15,9 @@ Formal specifications are English-only. README.md, README.ja.md and README.ko.md
 
 1. Exercise the wheel and quick start outside the source directory, with synthetic state only.
 2. Validate source privacy, license notices, README parity and links.
-3. Run CI on the published GitHub repository; prepared workflows alone are not a pass.
+3. Require remote CI to pass for the exact released commit.
 4. Complete a broader real-project evaluation and document supported platforms and known failures.
-5. Confirm repository ownership/visibility and intended copyright attribution, perform name/brand clearance, then create a tagged public release.
+5. Publish an explicitly bounded pre-release under the confirmed owner account. Name/trademark clearance is a separate brand-development task; no registered trademark or exclusive-name claim is made.
 
 ## After the first public release
 

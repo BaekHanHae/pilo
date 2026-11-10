@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.1 — public-source candidate
+## 0.3.1 — first public pre-release
 
 - Package immutable SQL migrations with the wheel.
 - Generate clean test fixtures from SQL instead of personal backups/configuration.
@@ -13,3 +13,6 @@
 - Add bounded local Ollama analysis, semantic context and Graphify Python structure adapters.
 - Preserve Snapshot evidence and current authorization; validate model output structure/citations.
 - Correct Graphify stdout/path handling and modern MCP catalog cache fields.
+
+- Exclude generated build/distribution/environment directories from ingestion, preventing duplicate context.
+- Add a reproducible source-checkout evaluation and remote macOS/Linux CI with retained evidence.

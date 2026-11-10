@@ -13,6 +13,10 @@ python3 -m unittest discover -s tests -v
 
 The Graphify integration case skips explicitly if its optional environment is unavailable. Model unit cases use controlled responses; they are not evidence of live model quality. The private integration evaluation additionally exercised real Ollama calls, official MCP SDK calls, Codex tool discovery/resource reads, and OpenCode legacy/modern handshake/catalog compatibility. OpenCode agent task execution was not verified.
 
-GitHub Actions runs core tests across macOS and Linux/Python versions and verifies a clean wheel quick start. Its results are pending until the repository exists and the workflow actually runs. No badge claiming a passing remote run is displayed.
+GitHub Actions runs SQL cases, core tests, a clean-source checkout evaluation and a wheel quick start across macOS/Linux with Python 3.11/3.14. Check the [actual workflow results](https://github.com/BaekHanHae/pilo/actions/workflows/ci.yml) for the commit/tag you use. Optional Graphify tests skip when its separate environment is absent.
 
 Package checks should verify no private data, runtime environments or model weights are included; both SQL copies match; links resolve; language READMEs use the same commands; and English formal documentation remains a single contract. A local report is generated during release preparation outside this repository.
+
+## Source-checkout evaluation
+
+With a clean Git checkout and PILO installed, run `python tools/evaluate_checkout.py --report build/ci-results/project-evaluation.json`. It tests eight source-oriented lexical queries and exact Snapshot rereads, creates/verifies a clean-Git checkpoint, and runs three diagnostic profiles using disposable state. It does not mutate or roll back the source repository. Generated build/distribution/environment directories are excluded from ingestion. This bounded self-project evaluation is not a general retrieval benchmark.

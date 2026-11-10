@@ -16,8 +16,10 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: python -m pip install .
-      - run: python tools/validate_schema.py
-      - run: python -m unittest discover -s tests -v 2>&1 | tee application-tests.txt
+      - run: mkdir -p build/ci-results
+      - run: python tools/validate_schema.py --report build/ci-results/sql-tests.json
+      - run: python -m unittest discover -s tests -v 2>&1 | tee build/ci-results/application-tests.txt
+      - run: python tools/evaluate_checkout.py --report build/ci-results/project-evaluation.json
       - run: python -m pip wheel --no-deps . --wheel-dir dist
       - name: Verify installed distribution outside source checkout
         shell: bash
@@ -33,6 +35,5 @@ jobs:
         with:
           name: pilo-${{ matrix.os }}-${{ matrix.python }}
           path: |
-            tools/test_results.json
-            application-tests.txt
+            build/ci-results/*
             dist/*.whl

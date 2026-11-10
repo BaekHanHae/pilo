@@ -6,7 +6,7 @@
 
 PILO helps an AI coding assistant find project information and keep a record of exactly what it read. It brings project-scoped permissions, immutable context snapshots, and optional local analysis into one small Python application.
 
-**Status:** 0.3.1 pre-release candidate. Core workflows have local automated tests; this is not a production-readiness or universal retrieval-accuracy claim. Public GitHub CI has not run yet.
+**Status:** 0.3.1 pre-release. Automated tests cover the bounded core workflows; this is not a production-readiness or universal retrieval-accuracy claim. [View CI results](https://github.com/BaekHanHae/pilo/actions/workflows/ci.yml).
 
 ## What you can do
 
@@ -20,9 +20,16 @@ Example: index a repository, ask for checkpoint-related context, then read the s
 
 ## Start in a few minutes
 
-Requirements: Python 3.11+, Git, and SQLite 3.37+ with JSON functions and FTS5 trigram support. The implementation uses POSIX filesystem protection; use macOS or Linux. Local release evidence covers macOS; Linux CI is prepared, not yet executed. Windows is not supported by this candidate.
+Requirements: Python 3.11+, Git, and SQLite 3.37+ with JSON functions and FTS5 trigram support. The implementation uses POSIX filesystem protection; use macOS or Linux. Remote CI covers macOS and Linux with Python 3.11/3.14. Windows is not supported by this candidate.
 
-From the extracted source directory:
+Get the source and enter its directory:
+
+```sh
+git clone https://github.com/BaekHanHae/pilo.git
+cd pilo
+```
+
+Then run:
 
 ```sh
 python3 -m venv .venv
