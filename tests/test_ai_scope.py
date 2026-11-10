@@ -14,19 +14,22 @@ class AIScopeTests(unittest.TestCase):
         CREATE TABLE Checkpoint(checkpoint_id TEXT, project_id TEXT);
         CREATE TABLE ApprovalRequest(approval_id TEXT, execution_id TEXT,
             status TEXT, expires_at TEXT, action TEXT, resource_type TEXT,
-            resource_id TEXT, resource_hash TEXT);
+            resource_id TEXT, resource_hash TEXT,
+            approval_context_hash TEXT, policy_version_ref TEXT);
         CREATE TABLE ApprovalGrant(approval_id TEXT, project_id TEXT, revoked_at TEXT);
         INSERT INTO Execution VALUES ('e','p','PROJECT');
         INSERT INTO ExecutionStep VALUES ('e','s');
         INSERT INTO Checkpoint VALUES ('c','p');
         INSERT INTO ApprovalRequest VALUES ('a','e','APPROVED',NULL,
-            'ai.execute','step','s','sha256:abc');
+            'ai.execute','step','s','sha256:abc','ctx:abc','policy:v1');
         INSERT INTO ApprovalGrant VALUES ('a','p',NULL);
         """)
         self.args = dict(project_id="p", execution_id="e", step_id="s",
                          approval_id="a", checkpoint_id="c", side_effecting=True,
                          expected_action="ai.execute", expected_resource_type="step",
-                         expected_resource_id="s", expected_resource_hash="sha256:abc")
+                         expected_resource_id="s", expected_resource_hash="sha256:abc",
+                         expected_context_hash="ctx:abc",
+                         expected_policy_version="policy:v1")
 
     def tearDown(self):
         self.db.close()
@@ -84,6 +87,14 @@ class AIScopeTests(unittest.TestCase):
     def test_missing_binding(self):
         with self.assertRaises(ScopeMismatch):
             self.validate(expected_action=None)
+
+    def test_wrong_context_hash(self):
+        with self.assertRaises(ScopeMismatch):
+            self.validate(expected_context_hash='ctx:other')
+
+    def test_wrong_policy_version(self):
+        with self.assertRaises(ScopeMismatch):
+            self.validate(expected_policy_version='policy:other')
 
     def test_read_only_without_approval(self):
         self.assertIsNone(self.validate(
