@@ -33,6 +33,7 @@ def finalize_ai_attempt(
     evidence_sha256: str | None,
     now: str,
     content_store: ContentStore | None = None,
+    binding: AIBinding | None = None,
 ) -> None:
     """Finalize with fence, revision, identity, permission and audit checks.
 
@@ -70,20 +71,33 @@ def finalize_ai_attempt(
 
     with core.connection(write=True) as db:
         core._authorize(db, actor, "ai.run", project_id)
-        validate_ai_scope(
-            db, project_id=project_id, execution_id=execution_id,
-            step_id=step_id, approval_id=None, checkpoint_id=None,
-            side_effecting=False,
-        )
         row = db.execute(
-            """SELECT project_id,execution_id,step_id,phase,fencing_token,revision
+            """SELECT project_id,execution_id,step_id,phase,fencing_token,revision,
+                      effect_class,approval_id,checkpoint_id
                FROM AIAttemptRecord WHERE attempt_id=?""",
             (attempt_id,),
         ).fetchone()
         if row is None or row[:3] != (project_id, execution_id, step_id):
             raise FinalizeRejected("Attempt identity mismatch")
-        if row[3:] != ("RUNNING", fencing_token, expected_revision):
+        if row[3:6] != ("RUNNING", fencing_token, expected_revision):
             raise FinalizeRejected("Stale fence, revision or attempt state")
+        effect_class, approval_id, checkpoint_id = row[6:]
+        if effect_class not in ("READ_ONLY", "WORKTREE_WRITE", "EXTERNAL"):
+            raise FinalizeRejected("Unknown effect class")
+        side_effecting = effect_class != "READ_ONLY"
+        if side_effecting and binding is None:
+            raise FinalizeRejected("Approval binding required for side effects")
+        validate_ai_scope(
+            db, project_id=project_id, execution_id=execution_id,
+            step_id=step_id, approval_id=approval_id,
+            checkpoint_id=checkpoint_id, side_effecting=side_effecting,
+            expected_action=binding.action if binding else None,
+            expected_resource_type=binding.resource_type if binding else None,
+            expected_resource_id=binding.resource_id if binding else None,
+            expected_resource_hash=binding.resource_hash if binding else None,
+            expected_context_hash=binding.context_hash if binding else None,
+            expected_policy_version=binding.policy_version if binding else None,
+        )
         updated = db.execute(
             """UPDATE AIAttemptRecord SET phase=?, evidence_ref=?,
                       revision=revision+1,updated_at=?
