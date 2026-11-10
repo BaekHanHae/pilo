@@ -70,7 +70,7 @@ class WorkspaceBase(Core):
         root=Path(root).resolve(strict=True);files={};excluded=[]
         for path in sorted(root.rglob('*')):
             rel=path.relative_to(root).as_posix();parts=Path(rel).parts
-            if any(p.startswith('.') or p in ('node_modules','__pycache__','data','backups','extensions') for p in parts):continue
+            if any(p.startswith('.') or p.endswith('.egg-info') or p in ('node_modules','__pycache__','data','backups','extensions','build','dist','venv','env','site-packages') for p in parts):continue
             if path.is_symlink():excluded.append(rel);continue
             if not path.is_file() or not any(fnmatch.fnmatch(rel,p) for p in patterns):continue
             if len(files)>=max_files:raise ValueError('Scan file budget exceeded')

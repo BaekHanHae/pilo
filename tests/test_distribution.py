@@ -38,3 +38,14 @@ class DistributionTests(unittest.TestCase):
         root=Path(__file__).resolve().parents[1]
         for name in ('0001_initial_schema.sql','0002_workspace.sql'):
             self.assertEqual((root/'pilo_core/sql'/name).read_bytes(),(root/'database/migrations'/name).read_bytes())
+
+    def test_build_outputs_do_not_duplicate_project_context(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);state=root/'state';source=root/'source';source.mkdir()
+            (source/'readme.md').write_text('unique public checkpoint')
+            for folder in ('build','dist','venv','env','site-packages','sample.egg-info'):
+                d=source/folder;d.mkdir();(d/'generated.md').write_text('generated duplicate checkpoint')
+            initialize(state);result=add_project(state/'database_config.json','sample','Sample',source)
+            c=Workspace(state/'database_config.json');found=c.retrieve('pilo-reader',result['project_id'],'checkpoint')
+            self.assertEqual(result['indexed_files'],1)
+            self.assertIn('unique public',found['content']);self.assertNotIn('generated duplicate',found['content'])
