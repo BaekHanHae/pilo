@@ -22,6 +22,10 @@ def validate_ai_scope(
     approval_id: str | None,
     checkpoint_id: str | None,
     side_effecting: bool,
+    expected_action: str | None = None,
+    expected_resource_type: str | None = None,
+    expected_resource_id: str | None = None,
+    expected_resource_hash: str | None = None,
 ) -> None:
     """Fail closed on missing, revoked, cross-project or unapproved scope."""
     values = (project_id, execution_id, step_id)
@@ -53,6 +57,13 @@ def validate_ai_scope(
         if checkpoint is None:
             raise ScopeMismatch("Checkpoint does not belong to project")
 
+    if side_effecting and any(
+        not isinstance(value, str) or not value.strip()
+        for value in (expected_action, expected_resource_type, expected_resource_id,
+                      expected_resource_hash)
+    ):
+        raise ScopeMismatch("Side effects require exact action/resource/hash binding")
+
     if approval_id is not None:
         approval = db.execute(
             """SELECT 1
@@ -63,8 +74,13 @@ def validate_ai_scope(
                  AND r.status = 'APPROVED'
                  AND g.project_id = ?
                  AND g.revoked_at IS NULL
+                 AND r.action = ?
+                 AND r.resource_type = ?
+                 AND r.resource_id = ?
+                 AND r.resource_hash = ?
                  AND (r.expires_at IS NULL OR r.expires_at > strftime('%Y-%m-%dT%H:%M:%fZ','now'))""",
-            (approval_id, execution_id, project_id),
+            (approval_id, execution_id, project_id, expected_action,
+             expected_resource_type, expected_resource_id, expected_resource_hash),
         ).fetchone()
         if approval is None:
             raise ScopeMismatch("Approval is missing, expired, revoked or out of scope")
