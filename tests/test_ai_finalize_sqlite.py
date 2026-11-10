@@ -57,6 +57,7 @@ class FinalizeTests(unittest.TestCase):
             execution_id="e", step_id="s", fencing_token=4,
             expected_revision=1, result_phase="COMPLETED",
             evidence_ref="cas:proof", evidence_sha256="a"*64, now="t2",
+            evidence_verified=True,
         )
 
     def tearDown(self):
@@ -91,6 +92,10 @@ class FinalizeTests(unittest.TestCase):
         self.run_finalize(result_phase="UNCERTAIN",
                           evidence_ref=None, evidence_sha256=None)
         self.assertEqual(self.phase(), ("UNCERTAIN", 2))
+
+    def test_unverified_evidence_rejected(self):
+        with self.assertRaises(FinalizeRejected):
+            self.run_finalize(evidence_verified=False)
 
     def test_invalid_digest(self):
         with self.assertRaises(FinalizeRejected):
