@@ -1,0 +1,23 @@
+[project]
+name = "pilo-core"
+version = "0.3.1"
+description = "Local project context, evidence and recovery for AI coding workflows"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE", "licenses/*.txt", "THIRD_PARTY_NOTICES.md"]
+authors = [{name = "PILO contributors"}]
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+pilo = "pilo_core.__main__:main"
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["pilo_core*"]
+
+[tool.setuptools.package-data]
+pilo_core = ["sql/*.sql"]

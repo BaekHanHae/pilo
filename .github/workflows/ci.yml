@@ -1,0 +1,38 @@
+name: core-and-wheel
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ['3.11', '3.14']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install .
+      - run: python tools/validate_schema.py
+      - run: python -m unittest discover -s tests -v 2>&1 | tee application-tests.txt
+      - run: python -m pip wheel --no-deps . --wheel-dir dist
+      - name: Verify installed distribution outside source checkout
+        shell: bash
+        run: |
+          python -m venv "$RUNNER_TEMP/pilo-smoke"
+          "$RUNNER_TEMP/pilo-smoke/bin/python" -m pip install dist/*.whl
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/pilo-smoke/bin/pilo" init --directory pilo-state
+          "$RUNNER_TEMP/pilo-smoke/bin/pilo" --config pilo-state/database_config.json add-project --key sample --name Sample --root "$GITHUB_WORKSPACE/examples/sample-project"
+          "$RUNNER_TEMP/pilo-smoke/bin/pilo" --config pilo-state/database_config.json search --project sample --query checkpoint
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pilo-${{ matrix.os }}-${{ matrix.python }}
+          path: |
+            tools/test_results.json
+            application-tests.txt
+            dist/*.whl

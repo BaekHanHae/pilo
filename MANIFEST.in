@@ -1,0 +1,8 @@
+include README.md README.ja.md README.ko.md LICENSE THIRD_PARTY_NOTICES.md CONTRIBUTING.md SECURITY.md BRANDING.md CHANGELOG.md
+recursive-include docs *.md
+recursive-include licenses *.txt
+recursive-include database/migrations *.sql
+recursive-include pilo_core/sql *.sql
+recursive-include tests *.py
+recursive-include tools *.py
+recursive-include examples *.md

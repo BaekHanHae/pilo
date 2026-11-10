@@ -1,0 +1,69 @@
+# PILO
+
+**Local project context, preserved evidence, and recovery for AI coding workflows.**
+
+[English](README.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
+
+PILO helps an AI coding assistant find project information and keep a record of exactly what it read. It brings project-scoped permissions, immutable context snapshots, and optional local analysis into one small Python application.
+
+**Status:** 0.3.1 pre-release candidate. Core workflows have local automated tests; this is not a production-readiness or universal retrieval-accuracy claim. Public GitHub CI has not run yet.
+
+## What you can do
+
+- Index allowed UTF-8 project files and search with SQLite FTS5.
+- Preserve the returned context as a Snapshot with source hashes and current permission checks.
+- Connect an MCP client through local standard input/output.
+- Optionally use Ollama for semantic search and evidence-based analysis, and Graphify for Python structural relationships.
+- Use operator-only APIs for reviewed CODE tasks and clean-Git checkpoints/recovery. These applying operations are disabled on the default MCP connection.
+
+Example: index a repository, ask for checkpoint-related context, then read the same Snapshot later to verify the exact evidence used.
+
+## Start in a few minutes
+
+Requirements: Python 3.11+, Git, and SQLite 3.37+ with JSON functions and FTS5 trigram support. The implementation uses POSIX filesystem protection; use macOS or Linux. Local release evidence covers macOS; Linux CI is prepared, not yet executed. Windows is not supported by this candidate.
+
+From the extracted source directory:
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install .
+.venv/bin/pilo init --directory .pilo
+.venv/bin/pilo --config .pilo/database_config.json add-project --key sample --name Sample --root examples/sample-project
+.venv/bin/pilo --config .pilo/database_config.json search --project sample --query checkpoint
+```
+
+The final command returns context, its Snapshot ID, source paths, and a completion status. An empty or partial result is reported explicitly. Initialization refuses to overwrite an existing installation.
+
+To index your own project, run `add-project` with its directory and a different project key. This is an explicit local operator action. It configures a dedicated reader and disables its temporary indexing identity afterward.
+
+## Connect your coding assistant
+
+Use the executable's absolute path to run `pilo --config /absolute/path/to/.pilo/database_config.json serve` as a local STDIO MCP server. The default connection exposes project listing, project details, context retrieval, and Snapshot reading. See the English [MCP specification](docs/mcp.md) for a configuration template and boundaries. Hosted/cloud clients cannot be assumed to access your local process.
+
+## Optional features and limits
+
+| Feature | Implementation | Current boundary |
+|---|---|---|
+| Semantic search | Local Ollama embeddings and exact cosine ranking | Up to 512 eligible units; computed on demand |
+| AI analysis | Local Ollama over a preserved Snapshot | Structured answer and citation checks; model claims still need review |
+| Graph relationships | Optional Graphify adapter | Python structure only, up to 100 files / 2 MB |
+| Recovery | Clean-Git checkpoint, replay and rollback contracts | Git objects and content-store bytes must remain available |
+
+The default installation requires no model, cloud account, API key, or Graphify. Read [optional extensions](docs/extensions.md) before enabling them. Models and third-party code are governed by their own licenses.
+
+## Documentation
+
+Formal specifications are maintained **in English only**:
+
+- [Public implementation specification](docs/specification.md)
+- [MCP contract](docs/mcp.md)
+- [Optional extensions](docs/extensions.md)
+- [Decisions and roadmap](docs/roadmap.md)
+- [Testing and evidence](docs/verification.md)
+- [Contributing](CONTRIBUTING.md), [security](SECURITY.md), [brand use](BRANDING.md)
+
+The Japanese and Korean READMEs explain the product and quick start; they are not separate specifications.
+
+## License
+
+PILO-owned code and documentation are licensed under [MIT](LICENSE). Optional dependencies retain their own licenses, including Graphify's Apache-2.0 notices. See [third-party notices](THIRD_PARTY_NOTICES.md). No model weights, private project data, or original private conversations are distributed.
