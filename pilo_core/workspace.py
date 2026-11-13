@@ -12,7 +12,9 @@ from .core import Core,AccessDenied,ConfigurationError,canonical,now
 from .security import authorize,has_permission,policy_hash,scope_hash,approval_context
 from .storage import ContentStore
 
-LEXICAL_RANKER_VERSION='deterministic-v2'
+LEXICAL_RANKER_VERSION='deterministic-v3'
+# Reserve first-pass space for distinct sources before filling with more chunks.
+FIRST_PASS_SOURCE_LIMIT=1
 
 
 def uid():return str(uuid.uuid4())
@@ -224,14 +226,20 @@ class WorkspaceBase(Core):
                 db.execute('INSERT INTO QueryCache VALUES(?,?,?,?,?)',(cache_key,scope,policy,canonical(candidates),now()))
                 for space,s,i in gens:db.execute('INSERT INTO CacheDependency VALUES(?,?,?,?)',(cache_key,space,s,i))
             execution=execution_id or self._execution(db,actor,project,'RETRIEVAL');retrieval=uid();snapshot=uid();items=[];pieces=[];used=0;excluded=[]
-            for unit in candidates:
-                row=byid.get(unit)
-                if not row:raise ConfigurationError('Cached source no longer eligible')
-                piece=f'[{row[4]}]\n{row[2]}\n';cost=len(piece.encode())+(1 if pieces else 0)
-                if used+cost>max_tokens:
-                    if row[5] in ('RULE','DECISION'):raise ValueError('Mandatory context exceeds budget')
-                    excluded.append(unit);continue
-                items.append(row);pieces.append(piece);used+=cost
+            deferred=[];source_counts={}
+            for pass_index,pending in enumerate((candidates,deferred)):
+                for unit in pending:
+                    row=byid.get(unit)
+                    if not row:raise ConfigurationError('Cached source no longer eligible')
+                    mandatory=row[5] in ('RULE','DECISION')
+                    if pass_index==0 and not mandatory and source_counts.get(row[4],0)>=FIRST_PASS_SOURCE_LIMIT:
+                        deferred.append(unit);continue
+                    piece=f'[{row[4]}]\n{row[2]}\n';cost=len(piece.encode())+(1 if pieces else 0)
+                    if used+cost>max_tokens:
+                        if mandatory:raise ValueError('Mandatory context exceeds budget')
+                        excluded.append(unit);continue
+                    items.append(row);pieces.append(piece);used+=cost
+                    source_counts[row[4]]=source_counts.get(row[4],0)+1
             body='\n'.join(pieces);ref=self.store.put(body.encode());status='COMPLETED' if items and not excluded else 'PARTIAL'
             db.execute('INSERT INTO RetrievalRun VALUES(?,?,?,?,?,?,?,?,?,?,?)',(retrieval,execution,project,actor,request_hash,key,scope,policy,status,'SUFFICIENT' if status=='COMPLETED' else 'INSUFFICIENT',now()))
             db.execute('INSERT INTO ContextSnapshot VALUES(?,?,?,?,?,?,?,?,?)',(snapshot,execution,retrieval,ref,ref,len(body.encode()),'utf8-byte-upper-bound-v1',ranker_version,now()))
