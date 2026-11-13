@@ -12,6 +12,8 @@ from .core import Core,AccessDenied,ConfigurationError,canonical,now
 from .security import authorize,has_permission,policy_hash,scope_hash,approval_context
 from .storage import ContentStore
 
+LEXICAL_RANKER_VERSION='deterministic-v2'
+
 
 def uid():return str(uuid.uuid4())
 def digest(value):return hashlib.sha256(canonical(value).encode()).hexdigest()
@@ -191,7 +193,8 @@ class WorkspaceBase(Core):
             generation=db.execute('SELECT space_id,source_generation,indexed_generation FROM SpaceGeneration ORDER BY space_id').fetchall()
             gens=[r for r in generation if r[0] in spaces]
             if any(s!=i for _,s,i in gens):raise ConfigurationError('Search index generation is stale')
-            cache_key=digest([query,scope,policy,gens,strategy]);cached=db.execute('SELECT candidates FROM QueryCache WHERE cache_key=? AND scope_fingerprint=?',(cache_key,scope)).fetchone()
+            ranker_version='semantic-ollama-v1' if strategy=='semantic' else LEXICAL_RANKER_VERSION
+            cache_key=digest([query,scope,policy,gens,strategy,ranker_version]);cached=db.execute('SELECT candidates FROM QueryCache WHERE cache_key=? AND scope_fingerprint=?',(cache_key,scope)).fetchone()
             candidates=json.loads(cached[0]) if cached and strategy=='lexical' else None
             if strategy=='semantic':self._check(db,actor,'vector.read',project)
             placeholders=','.join('?' for _ in spaces)
@@ -214,7 +217,9 @@ class WorkspaceBase(Core):
                 for row in rows:
                     mandatory=row[5] in ('RULE','DECISION');exact=query.casefold() in (row[4] or '').casefold();lexical=query.casefold() in row[2].casefold()
                     if mandatory or exact or lexical or rowids.get(row[0]) in hits:
-                        ranked.append((not mandatory,not exact,not lexical,row[4] or '',row[0]))
+                        path=row[4] or ''
+                        is_canonical=path.endswith('.md') and ('/' not in path or path.startswith('docs/'))
+                        ranked.append((not mandatory,not exact,not is_canonical,not lexical,path,row[0]))
                 candidates=[x[-1] for x in sorted(ranked)][:100]
                 db.execute('INSERT INTO QueryCache VALUES(?,?,?,?,?)',(cache_key,scope,policy,canonical(candidates),now()))
                 for space,s,i in gens:db.execute('INSERT INTO CacheDependency VALUES(?,?,?,?)',(cache_key,space,s,i))
@@ -229,7 +234,7 @@ class WorkspaceBase(Core):
                 items.append(row);pieces.append(piece);used+=cost
             body='\n'.join(pieces);ref=self.store.put(body.encode());status='COMPLETED' if items and not excluded else 'PARTIAL'
             db.execute('INSERT INTO RetrievalRun VALUES(?,?,?,?,?,?,?,?,?,?,?)',(retrieval,execution,project,actor,request_hash,key,scope,policy,status,'SUFFICIENT' if status=='COMPLETED' else 'INSUFFICIENT',now()))
-            db.execute('INSERT INTO ContextSnapshot VALUES(?,?,?,?,?,?,?,?,?)',(snapshot,execution,retrieval,ref,ref,len(body.encode()),'utf8-byte-upper-bound-v1',('semantic-ollama-v1' if strategy=='semantic' else 'deterministic-v1'),now()))
+            db.execute('INSERT INTO ContextSnapshot VALUES(?,?,?,?,?,?,?,?,?)',(snapshot,execution,retrieval,ref,ref,len(body.encode()),'utf8-byte-upper-bound-v1',ranker_version,now()))
             for ordinal,row in enumerate(items):db.execute('INSERT INTO ContextSnapshotItem VALUES(?,?,?,?,?)',(snapshot,ordinal,row[1],row[0],row[3]))
             for rank,unit in enumerate(candidates,1):db.execute('INSERT INTO RetrievalCandidate VALUES(?,?,?,?,?)',(retrieval,unit,rank,'EXCLUDED' if unit in excluded else 'SELECTED','budget' if unit in excluded else 'policy-and-relevance'))
             db.execute('INSERT INTO SnapshotSeal VALUES(?)',(snapshot,))
