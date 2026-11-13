@@ -44,14 +44,35 @@ class FinalizeTests(unittest.TestCase):
                 resource_id TEXT,resource_hash TEXT,approval_context_hash TEXT,
                 policy_version_ref TEXT);
             CREATE TABLE ApprovalGrant(approval_id TEXT,project_id TEXT,revoked_at TEXT);
-            CREATE TABLE AIAttemptRecord(attempt_id TEXT PRIMARY KEY,
-                project_id TEXT,execution_id TEXT,step_id TEXT,phase TEXT,
-                fencing_token INTEGER,revision INTEGER,evidence_ref TEXT,
-                updated_at TEXT);
+            CREATE TABLE AIAttemptRecord (
+                attempt_id TEXT PRIMARY KEY NOT NULL,
+                project_id TEXT NOT NULL REFERENCES Project(project_id) ON DELETE RESTRICT,
+                execution_id TEXT NOT NULL REFERENCES Execution(execution_id) ON DELETE RESTRICT,
+                step_id TEXT NOT NULL,
+                adapter_id TEXT NOT NULL CHECK(length(trim(adapter_id)) > 0),
+                effect_class TEXT NOT NULL CHECK(effect_class IN ('READ_ONLY','WORKTREE_WRITE','EXTERNAL')),
+                phase TEXT NOT NULL CHECK(phase IN ('PENDING','RUNNING','COMPLETED','FAILED','UNCERTAIN','CANCELLED')),
+                fencing_token INTEGER NOT NULL DEFAULT 0 CHECK(fencing_token >= 0),
+                approval_id TEXT REFERENCES ApprovalRequest(approval_id) ON DELETE RESTRICT,
+                checkpoint_id TEXT REFERENCES Checkpoint(checkpoint_id) ON DELETE RESTRICT,
+                input_digest TEXT NOT NULL CHECK(length(input_digest) = 64 AND input_digest NOT GLOB '*[^0-9a-f]*'),
+                evidence_ref TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                revision INTEGER NOT NULL DEFAULT 0 CHECK(revision >= 0),
+                UNIQUE(execution_id, attempt_id),
+                FOREIGN KEY(execution_id, step_id) REFERENCES ExecutionStep(execution_id, step_id) ON DELETE RESTRICT,
+                CHECK (
+                    (phase = 'PENDING' AND fencing_token = 0)
+                    OR (phase <> 'PENDING' AND fencing_token > 0)
+                )
+            ) STRICT;
             INSERT INTO Execution VALUES('e','p','PROJECT');
             INSERT INTO ExecutionStep VALUES('e','s');
             INSERT INTO AIAttemptRecord VALUES
-                ('a','p','e','s','RUNNING',4,1,NULL,'READ_ONLY',NULL,NULL,'t');
+                ('a','p','e','s','mock','READ_ONLY','RUNNING',4,NULL,NULL,
+                 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                 NULL,'t','t',1);
         """)
         self.core = FakeCore(self.db)
         self.tempdir = tempfile.TemporaryDirectory()
@@ -112,7 +133,11 @@ class FinalizeTests(unittest.TestCase):
             self.run_finalize(evidence_sha256="bad")
 
     def test_unrecognized_effect_class_fails_closed(self):
+        # Inject invalid persisted data to test Core's rejection independently
+        # of the production schema's CHECK constraint on effect_class.
+        self.db.execute("PRAGMA ignore_check_constraints=ON")
         self.db.execute("UPDATE AIAttemptRecord SET effect_class='INVALID'")
+        self.db.execute("PRAGMA ignore_check_constraints=OFF")
         with self.assertRaises(FinalizeRejected):
             self.run_finalize()
         self.assertEqual(self.phase(), ("RUNNING", 1))
