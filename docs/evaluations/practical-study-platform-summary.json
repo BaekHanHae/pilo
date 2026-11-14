@@ -1,0 +1,239 @@
+{
+  "format": "pilo.practical-evaluation.v1",
+  "pilo_runtime_commit": "10c97f23bf2d60784aed19a19ea02982b6fff408",
+  "source_manifest_sha256": "c8e9b07391edc93e487be2638eb4d906b35aa56e5a34e5f5fe4518e5adb9f56a",
+  "investigation_tasks": 20,
+  "repair_pilots": 2,
+  "paired_batches": 1,
+  "retrieval": {
+    "literal": {
+      "tasks": 20,
+      "mean_recall": 0.6,
+      "mean_precision": 0.38333333333333336,
+      "mrr": 0.45714285714285713,
+      "mean_seconds": 0.00382305630009796,
+      "context_bytes": 7098,
+      "replay_equal": null,
+      "evidence_integrity_valid": 20,
+      "failures": 0,
+      "gold_anchor_tasks": 5,
+      "nonempty_contexts": 12
+    },
+    "pilo": {
+      "tasks": 20,
+      "mean_recall": 0.45,
+      "mean_precision": 0.33333333333333337,
+      "mrr": 0.38333333333333336,
+      "mean_seconds": 0.009197162350756117,
+      "context_bytes": 56271,
+      "replay_equal": 20,
+      "evidence_integrity_valid": 20,
+      "failures": 0,
+      "gold_anchor_tasks": 9,
+      "nonempty_contexts": 11
+    }
+  },
+  "agents": {
+    "standard": {
+      "arm": "standard",
+      "status": "completed",
+      "capture_window_seconds": 74.63884782791138,
+      "usage": {
+        "input_tokens": 132280,
+        "cached_input_tokens": 91392,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2906,
+        "reasoning_output_tokens": 37
+      },
+      "evidence_successes": 20,
+      "valid_quotes": 20,
+      "tasks": 20,
+      "uncached_input_tokens": 40888,
+      "read_commands": 4,
+      "repair_targeted_tests": {
+        "D1": 22,
+        "D2": 7
+      },
+      "repair_tasks_passed": 2,
+      "combined_suite": {
+        "passed": 73,
+        "failed": 1,
+        "remaining_failure": "pre-existing native OCR case"
+      }
+    },
+    "pilo": {
+      "arm": "pilo",
+      "status": "completed",
+      "capture_window_seconds": 77.96221971511841,
+      "usage": {
+        "input_tokens": 223277,
+        "cached_input_tokens": 171264,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 3186,
+        "reasoning_output_tokens": 30
+      },
+      "evidence_successes": 20,
+      "valid_quotes": 20,
+      "tasks": 20,
+      "uncached_input_tokens": 52013,
+      "read_commands": 6,
+      "repair_targeted_tests": {
+        "D1": 22,
+        "D2": 7
+      },
+      "repair_tasks_passed": 2,
+      "combined_suite": {
+        "passed": 73,
+        "failed": 1,
+        "remaining_failure": "pre-existing native OCR case"
+      }
+    }
+  },
+  "per_task_file_recall": [
+    {
+      "task_id": "T01",
+      "literal_file_recall": 0.0,
+      "pilo_file_recall": 0.0
+    },
+    {
+      "task_id": "T02",
+      "literal_file_recall": 1.0,
+      "pilo_file_recall": 0.0
+    },
+    {
+      "task_id": "T03",
+      "literal_file_recall": 0.0,
+      "pilo_file_recall": 0.0
+    },
+    {
+      "task_id": "T04",
+      "literal_file_recall": 1.0,
+      "pilo_file_recall": 1.0
+    },
+    {
+      "task_id": "T05",
+      "literal_file_recall": 1.0,
+      "pilo_file_recall": 0.0
+    },
+    {
+      "task_id": "T06",
+      "literal_file_recall": 0.0,
+      "pilo_file_recall": 0.0
+    },
+    {
+      "task_id": "T07",
+      "literal_file_recall": 1.0,
+      "pilo_file_recall": 1.0
+    },
+    {
+      "task_id": "T08",
+      "literal_file_recall": 1.0,
+      "pilo_file_recall": 1.0
+    },
+    {
+      "task_id": "T09",
+      "literal_file_recall": 1.0,
+      "pilo_file_recall": 1.0
+    },
+    {
+      "task_id": "T10",
+      "literal_file_recall": 0.0,
+      "pilo_file_recall": 0.0
+    },
+    {
+      "task_id": "T11",
+      "literal_file_recall": 1.0,
+      "pilo_file_recall": 1.0
+    },
+    {
+      "task_id": "T12",
+      "literal_file_recall": 0.0,
+      "pilo_file_recall": 0.0
+    },
+    {
+      "task_id": "T13",
+      "literal_file_recall": 1.0,
+      "pilo_file_recall": 1.0
+    },
+    {
+      "task_id": "T14",
+      "literal_file_recall": 0.0,
+      "pilo_file_recall": 0.0
+    },
+    {
+      "task_id": "T15",
+      "literal_file_recall": 1.0,
+      "pilo_file_recall": 1.0
+    },
+    {
+      "task_id": "T16",
+      "literal_file_recall": 0.0,
+      "pilo_file_recall": 0.0
+    },
+    {
+      "task_id": "T17",
+      "literal_file_recall": 1.0,
+      "pilo_file_recall": 1.0
+    },
+    {
+      "task_id": "T18",
+      "literal_file_recall": 0.0,
+      "pilo_file_recall": 0.0
+    },
+    {
+      "task_id": "T19",
+      "literal_file_recall": 1.0,
+      "pilo_file_recall": 0.0
+    },
+    {
+      "task_id": "T20",
+      "literal_file_recall": 1.0,
+      "pilo_file_recall": 1.0
+    }
+  ],
+  "artifact_sha256": {
+    "source-manifest.private.json": "dc9566c278dda50c63bc2f902ced5bb19735859e6394bbe1f223134f9a158ed4",
+    "tasks.private.json": "9b2b5ee954603586f719519cc2de6c181f1ca77bd43a8129d93bfb201cd9ac2d",
+    "standard.prompt.txt": "f56b4715497aae39f69542643b2d78d44aae06949ad841f41bb333f67ab93826",
+    "pilo.prompt.txt": "12c5e459870c16ac8df91b1bcfcdadbfb98fc829bf262ad8d8ede9e10d97f156",
+    "standard.events.jsonl": "67bc11c2f191de4aa40ef896c9b8db045a1b940d22f16772c2f661e053df6992",
+    "pilo.events.jsonl": "36d852bd8428194f1c785eca7cfcb9004f07a2c3001ac51b7f05508f744b876e",
+    "standard.answer.json": "7965bdd1196f94dca4e3477a5d55786737063399dbf1a0de9c1ac9d260c69d6d",
+    "pilo.answer.json": "36dd97af3adf6ab3417f59021a1f614ed679623c443b806a95bbe4a33b861419",
+    "platform-baseline.log": "0d34adb53b612d47af94396f6112fdeaaba243a1cee0069a912df13a5f7833e5",
+    "platform-lint.log": "5bed68f86578afa514b521560bfd0bb4a25d8d6f243545705b4a669dfae0ff65",
+    "standard-D1-tests.log": "e9b0f2fcf1033e65b3021aabcca830044e18da580d089e3f3e4272e5d41172d1",
+    "standard-D2-tests.log": "60958c68382566e33bf24f6f480106beed03d8d817c83ec120acc0fb4515201e",
+    "pilo-D1-tests.log": "2bfd858c3f92b42133e766de989e2659ad47acda9d519de74255227ca4d308e0",
+    "pilo-D2-tests.log": "0042ed64fa9ee05a4e47b5a6108919d44b5abbdc20bfec1d76e92f6f8e5e5edb",
+    "retrieval-valid/results.sqlite3": "811375389e0f856691c0af1052eaac81e60ac73d9312bb15375cf44d4490007f",
+    "repository-provenance.private.json": "de8a54d297c65c66e7120a24dcc6323cd63567071f8de98b38d6ae0189b22a96",
+    "standard-combined-tests.log": "9041bce15e2af5ddf63b48655d2069f8ce0bd15a3882a51749838366c589d2e0",
+    "pilo-combined-tests.log": "74ac67dca90de01633d6680fd4c1675c54cddd597b9cdd34f051b01acaf30f3c"
+  },
+  "integration": {
+    "indexed_files": 33,
+    "corpus_files": 46,
+    "setup_seconds": 0.1471730839984957,
+    "context_budget_bytes": 8192,
+    "ai_execution_enabled": false
+  },
+  "platform_baseline": {
+    "passed": 65,
+    "failed": 4,
+    "lint_errors": 4
+  },
+  "pilo_regression": {
+    "executed": 85,
+    "passed": 84,
+    "skipped": 1
+  },
+  "limitations": [
+    "Single fixed-order paired batch; tasks are not independent model trials.",
+    "Exact quotes and gold anchors are proxies for evidence relevance, not semantic proof.",
+    "Default resolved model identity unavailable in CLI events; exact model equivalence unverified.",
+    "Capture-window time is a log timestamp proxy, not CPU time or per-task timing.",
+    "Private task manifests and source content are retained locally, not published.",
+    "No production deployment, real library data, or long-term maintenance outcomes were tested."
+  ]
+}
