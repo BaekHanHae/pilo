@@ -22,14 +22,15 @@ class Schema3CandidateTests(unittest.TestCase):
         db.execute("PRAGMA foreign_keys=ON")
         db.executescript("""
         CREATE TABLE Project(project_id TEXT PRIMARY KEY);
-        CREATE TABLE Execution(execution_id TEXT PRIMARY KEY);
+        CREATE TABLE Execution(execution_id TEXT PRIMARY KEY,project_id TEXT);
         CREATE TABLE ExecutionStep(execution_id TEXT,step_id TEXT,
             PRIMARY KEY(execution_id,step_id));
         CREATE TABLE Principal(principal_id TEXT PRIMARY KEY);
         CREATE TABLE ApprovalRequest(approval_id TEXT PRIMARY KEY);
-        CREATE TABLE Checkpoint(checkpoint_id TEXT PRIMARY KEY);
+        CREATE TABLE Checkpoint(checkpoint_id TEXT PRIMARY KEY,project_id TEXT,UNIQUE(project_id,checkpoint_id));
+        CREATE TABLE Permission(permission_id TEXT PRIMARY KEY,permission_key TEXT,description TEXT,created_at TEXT);
         INSERT INTO Project VALUES ('p');
-        INSERT INTO Execution VALUES ('e');
+        INSERT INTO Execution VALUES ('e','p');
         INSERT INTO ExecutionStep VALUES ('e','s');
         INSERT INTO Principal VALUES ('reviewer');
         """)

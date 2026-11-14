@@ -17,7 +17,7 @@ class FinalizeTests(unittest.TestCase):
     def setUp(self):
         temp = tempfile.TemporaryDirectory(); self.addCleanup(temp.cleanup)
         self.root = Path(temp.name)
-        self.core, self.project, self.other = install(self.root)
+        self.core, self.project, self.other = install(self.root, seed=False)
         self.repo = self.root / 'repo'; self.repo.mkdir()
         self.git('init', '-q'); self.git('config', 'user.name', 'Test')
         self.git('config', 'user.email', 'test@example.invalid')
@@ -32,7 +32,9 @@ class FinalizeTests(unittest.TestCase):
             db.execute("INSERT INTO Checkpoint VALUES('c',?,?,?,?,'system','t')",
                        (self.project, ref, ref, self.commit))
             db.execute("INSERT INTO CheckpointSeal VALUES('c')")
-            db.execute("UPDATE AIAttemptRecord SET effect_class='READ_ONLY',checkpoint_id='c'")
+            db.execute("""INSERT INTO AIAttemptRecord VALUES(
+                'a',?,'e','s','test','READ_ONLY','RUNNING',4,NULL,'c',?,NULL,'t','t',1)""",
+                (self.project, 'a' * 64))
         self.kw = dict(actor='executor', attempt_id='a', project_id=self.project,
             execution_id='e', step_id='s', fencing_token=4, expected_revision=1, now='t2')
         self.evidence, self.digest = self.register()
@@ -134,6 +136,8 @@ class FinalizeTests(unittest.TestCase):
 
     def test_external_effects_are_never_proved_by_text(self):
         with self.core.connection(write=True) as db:
-            db.execute("UPDATE AIAttemptRecord SET effect_class='EXTERNAL'")
-        with self.assertRaises(ProvenanceRejected): self.register()
-        with self.assertRaises(FinalizeRejected): self.finalize()
+            db.execute("""INSERT INTO AIAttemptRecord VALUES(
+                'external',?,'e','s','test','EXTERNAL','RUNNING',4,NULL,'c',?,NULL,'t','t',1)""",
+                (self.project, 'a' * 64))
+        with self.assertRaises(ProvenanceRejected): self.register(attempt_id='external')
+        with self.assertRaises(FinalizeRejected): self.finalize(attempt_id='external')

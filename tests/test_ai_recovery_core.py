@@ -42,13 +42,6 @@ class RecoveryCoreTests(unittest.TestCase):
 
     def test_revoked_approval_during_execution(self):
         with self.core.connection(write=True) as db:
-            db.execute("""INSERT INTO ApprovalRequest(approval_context_hash,
-                policy_version_ref,approval_id,execution_id,resource_type,
-                resource_id,action,status,requested_by,requested_at)
-                VALUES('hash','policy','approval','e','WORKSPACE','resource',
-                'ai.run','PENDING','system','2026-01-01')""")
-            db.execute("INSERT INTO ApprovalGrant VALUES('approval',?,'{}',NULL)", (self.project,))
-            db.execute("UPDATE AIAttemptRecord SET approval_id='approval'")
             db.execute("UPDATE ApprovalGrant SET revoked_at='2026-01-02' WHERE approval_id='approval'")
         self.uncertain()
         self.assertEqual(self.state(), ('UNCERTAIN', 2))

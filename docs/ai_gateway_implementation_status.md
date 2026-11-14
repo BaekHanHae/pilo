@@ -64,3 +64,27 @@ Issue 3 exact commit: `f79419501e67d1bf9b9030d864a8b2a9b7445b7c`.
 Local regression: 163 tests successful, one skipped. GitHub Actions run
 [43585307699](https://github.com/BaekHanHae/pilo/actions/runs/43585307699)
 completed successfully for that commit.
+
+## Issue 5: schema and CLI rehearsal
+
+See [schema/CLI integration plan](ai_schema3_cli_integration_plan.md). Composite
+ownership, immutable attempt identity, fence/revision transitions and default-deny
+AI permission inventory are now included in the dormant additive candidate.
+Offline backup/copy migration and post-commit report recovery are tested without
+changing the source installation. Vendor-neutral invocation preparation and two
+fake CLI input profiles are tested; production dispatch unconditionally denies.
+Separate scheduling, OS/network isolation, approved write-output verification and
+two real agent adapters remain unresolved. No issue is declared fully closed.
+
+Issue 4 exact commit: `f588e3e75dc9b41729716b24b4f2f20da599da96`.
+Local regression: 164 tests successful, one skipped; SQL validation: 143 passed.
+GitHub Actions run [43585626222](https://github.com/BaekHanHae/pilo/actions/runs/43585626222)
+completed successfully for that commit. Draft PRs are stacked on the prior work:
+[#6](https://github.com/BaekHanHae/pilo/pull/6),
+[#7](https://github.com/BaekHanHae/pilo/pull/7). Neither has been merged.
+
+Latest Issue 5 local regression: `python3 -m unittest discover -s tests` ran
+176 tests successfully (one skipped). SQL validation ran 143 tests successfully.
+The repository evaluation initially refused the uncommitted worktree, as expected;
+its clean-commit result is recorded in the PR. Exact Issue 5 head and Actions run
+are recorded in its Draft PR after push. No real agent E2E is claimed.

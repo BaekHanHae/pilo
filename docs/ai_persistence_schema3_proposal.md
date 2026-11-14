@@ -2,6 +2,10 @@
 
 Status: **PROPOSAL ONLY**. Do not run as a migration. PILO Core 0.3.1 supports schema 2 and validates exact migration history/checksums. Adding SQL without updating the Core migrator, configuration, and validation would break existing installations.
 
+See the [offline schema/CLI integration plan](ai_schema3_cli_integration_plan.md)
+for the additive candidate and executed rehearsal scope. The production migrator
+remains unchanged and cannot activate this candidate.
+
 ## Verified schema-2 constraints
 
 - `StepAttempt.status` permits RUNNING, COMPLETED, FAILED, INTERRUPTED, CANCELLED; it **does not permit UNCERTAIN**.
