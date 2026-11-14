@@ -10,7 +10,7 @@ PILO helps an AI coding assistant find project information and keep a record of 
 
 ## What you can do
 
-- Index allowed UTF-8 project files and search with SQLite FTS5.
+- Index allowed UTF-8 backend/frontend text and search deterministically with SQLite.
 - Preserve the returned context as a Snapshot with source hashes and current permission checks.
 - Connect an MCP client through local standard input/output.
 - Optionally use Ollama for semantic search and evidence-based analysis, and Graphify for Python structural relationships.
@@ -45,7 +45,7 @@ To index your own project, run `add-project` with its directory and a different 
 
 ## Connect your coding assistant
 
-Use the executable's absolute path to run `pilo --config /absolute/path/to/.pilo/database_config.json serve` as a local STDIO MCP server. The default connection exposes project listing, project details, context retrieval, and Snapshot reading. See the English [MCP specification](docs/mcp.md) for a configuration template and boundaries. Hosted/cloud clients cannot be assumed to access your local process.
+Use the executable's absolute path to run `pilo --config /absolute/path/to/.pilo/database_config.json serve` as a local STDIO MCP server. The default connection exposes project listing/details, metadata-only evidence search, explicit bounded evidence export, and Snapshot reading; legacy context retrieval remains available. See the English [MCP specification](docs/mcp.md) for a configuration template and boundaries. Hosted/cloud clients cannot be assumed to access your local process.
 
 ## Optional features and limits
 
@@ -83,3 +83,8 @@ The initial pilot found equal task outcomes with higher token usage for the PILO
 arm. Read-only snapshots remain a focused experiment; AI Gateway work is not a
 prerequisite. The [local evaluation harness](tools/practical_eval/README.md) uses
 Python and SQLite and does not add a dependency to the evaluated project.
+
+The [retrieval recovery and held-out re-evaluation](docs/PILO_RETRIEVAL_REEVALUATION_REPORT.md)
+restores release checks and improves file recall, but does not demonstrate repeatable
+Codex productivity or uncached-token savings. Prefer explicit deterministic search
+and small Snapshot export; automatic bulk context injection is not the default.

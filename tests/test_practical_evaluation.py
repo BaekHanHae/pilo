@@ -22,14 +22,14 @@ class PracticalEvaluationTests(unittest.TestCase):
                       dict(id='T2', question='Find frontendNeedle.', query='frontendNeedle',
                            gold={'view.tsx': 'const frontendNeedle'})]
 
-    def test_real_snapshot_replay_and_known_frontend_coverage_gap(self):
+    def test_real_snapshot_replay_and_frontend_coverage(self):
         output = self.root / 'result'
         metadata = retrieve_cases(self.corpus, self.tasks, output)
         self.assertEqual(metadata['health'], 'ok')
         self.assertFalse(metadata['ai_execution_enabled'])
         with closing(sqlite3.connect(output / 'results.sqlite3')) as db:
             rows = db.execute("SELECT task_id,recall,snapshot_equal,evidence_valid,error FROM retrieval WHERE arm='pilo' ORDER BY task_id").fetchall()
-            self.assertEqual(rows, [('T1',1.0,1,1,None), ('T2',0.0,1,1,None)])
+            self.assertEqual(rows, [('T1',1.0,1,1,None), ('T2',1.0,1,1,None)])
         exported = aggregate(output / 'results.sqlite3')
         self.assertEqual(exported['literal']['mean_recall'], 1.0)
         self.assertNotIn('service.py', json.dumps(exported))
@@ -94,7 +94,9 @@ class PracticalEvaluationTests(unittest.TestCase):
             self.assertEqual((output/arm/'service.py').read_bytes(),(self.corpus/'service.py').read_bytes())
             self.assertNotIn('def needle():',(output/(arm+'.prompt.txt')).read_text())
         self.assertNotIn('retrieved evidence',(output/'standard.prompt.txt').read_text())
-        self.assertIn('retrieved evidence',(output/'pilo.prompt.txt').read_text())
+        self.assertNotIn('retrieved evidence',(output/'pilo.prompt.txt').read_text())
+        legacy=prepare_sessions(self.corpus,self.tasks,contexts,self.root/'legacy',mode='legacy-bulk')
+        self.assertIn('retrieved evidence',(legacy/'pilo.prompt.txt').read_text())
 
     def test_failed_test_summary_is_not_reported_as_green(self):
         from tools.practical_eval.agents import import_test_log

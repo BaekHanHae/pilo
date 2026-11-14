@@ -15,6 +15,13 @@ def main():
     sub.add_parser('list')
     search = sub.add_parser('search')
     search.add_argument('--project',required=True);search.add_argument('--query',required=True)
+    evidence_search = sub.add_parser('evidence-search',help='Find source/hash handles without source bodies')
+    evidence_search.add_argument('--project',required=True);evidence_search.add_argument('--query',required=True)
+    evidence_search.add_argument('--limit',type=int,default=3)
+    evidence = sub.add_parser('evidence',help='Export selected evidence as a small immutable Snapshot')
+    evidence.add_argument('--project',required=True);evidence.add_argument('--query',required=True)
+    evidence.add_argument('--unit-id',action='append',required=True)
+    evidence.add_argument('--max-bytes',type=int,default=2048)
     init = sub.add_parser('init'); init.add_argument('--directory', required=True)
     setup = sub.add_parser('add-project')
     for field in ('key','name','root'):setup.add_argument('--'+field,required=True)
@@ -51,7 +58,7 @@ def main():
             serve(args.config)
             return 0
         core = Core(args.config)
-        if args.command in ('list','search'):
+        if args.command in ('list','search','evidence-search','evidence'):
             from .workspace import Workspace
             workspace=Workspace(args.config);actor=workspace.config.get('mcp_principal','system')
             projects=workspace.accessible_projects(actor)
@@ -59,13 +66,18 @@ def main():
             else:
                 matches=[p for p in projects['projects'] if args.project in (p['project_id'],p['project_key'])]
                 if len(matches)!=1:raise LookupError('Readable project not found')
-                result=workspace.retrieve(actor,matches[0]['project_id'],args.query)
+                project=matches[0]['project_id']
+                if args.command=='evidence-search':
+                    result=workspace.search_evidence(actor,project,args.query,limit=args.limit)
+                elif args.command=='evidence':
+                    result=workspace.get_evidence(actor,project,args.unit_id,args.query,max_bytes=args.max_bytes)
+                else:result=workspace.retrieve(actor,project,args.query)
         elif args.command == 'grant':
             from .operator import provision
             result = provision(core, args.principal, args.permissions.split(','), args.project)
         elif args.command == 'workspace':
             from .workspace import Workspace
-            allowed = {'semantic_context','analyze_snapshot','graph_project','scan', 'retrieve', 'snapshot', 'rebuild_index', 'save_knowledge',
+            allowed = {'semantic_context','analyze_snapshot','graph_project','scan', 'retrieve', 'search_evidence', 'get_evidence', 'snapshot', 'rebuild_index', 'save_knowledge',
                        'activate_knowledge', 'add_evidence', 'request_promotion', 'apply_promotion',
                        'lineage', 'remember', 'memories', 'reference_common', 'resolve_reference', 'request_approval', 'decide_approval', 'revoke_approval',
                        'register_skill', 'create_plan', 'scheduler_tick', 'execution_detail',

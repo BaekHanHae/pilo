@@ -60,8 +60,10 @@ gold anchor with contexts.private.json and report the number of nonempty context
 ## Prepare external Codex comparison
 
 `protocol.prepare_sessions(corpus, tasks, contexts, new_directory, repairs=...)`
-creates two identical source copies, prompts and an output schema. The second arm
-receives PILO context; the first does not. Repair tasks are evaluator-authored
+creates two identical source copies, prompts and an output schema. Its default
+on-demand mode does not insert source bodies into either initial prompt. Configure
+optional reader-only MCP tools separately. Explicit mode='legacy-bulk' recreates
+the historical injection protocol. Repair tasks are evaluator-authored
 instructions with independent test oracles. The initial pilot used a predecessor
 wording of the same protocol; its exact executed prompts are retained and hashed.
 
@@ -80,7 +82,13 @@ codex exec --ignore-user-config --ephemeral --sandbox read-only \
   < /absolute/private/prompt.txt > /absolute/private/events.jsonl
 ```
 
-The harness itself never runs that command. Do not add a fallback model or
+The original harness functions do not run that command. The explicit opt-in
+`python3 -m tools.practical_eval.run_session --plan PRIVATE_PLAN --session ID --execute`
+runner can execute a separately authorized experiment with pinned model/effort,
+a read-only sandbox, monotonic wall timing, timeout cleanup and no fallback/retry.
+Existing session artifacts are never overwritten. It is independent of the AI
+Gateway. Keep the complete plan, prompt/schema hashes, native dependency versions
+and invalid preflight records private, then publish sanitized aggregates. Do not add a fallback model or
 automatically retry a failed/incomplete session. Record failure and missing metrics.
 Use `agents.import_session(...)` to validate exact answer evidence and import actual
 turn.completed token counters. Capture-window duration uses log birth/modification
@@ -107,3 +115,13 @@ They verify frontend coverage gaps, replay, budgets, binary-cache exclusion, exa
 evidence and traversal checks, missing usage, scoped patch copies and prompt gold
 separation. They do not require the learning-platform repository, Codex credentials,
 network, vector models or private raw artifacts.
+
+Counterbalance task blocks (for example standard/PILO then PILO/standard), declare
+gold and oracles before execution, and distinguish a tool being available from a
+tool actually used. A valid comparison must explicitly permit read-only shell
+inspection in both arms. Exact replacement blocks must be unique under the patch
+driver. Report patch-application rejections separately from test failures. If an
+oracle requires more than the task contract, preserve the incorrect grading log
+and document any uniform correction; never silently edit outcomes or rerun agents
+to choose a favorable result. Native watcher baselines must be checked under the
+same optional dependency environment before attributing timing failures to a repair.

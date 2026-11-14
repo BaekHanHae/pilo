@@ -26,6 +26,8 @@ TOOLS={
  'pilo_get_project':('Read one authorized project',schema(PROJECT,PROJECT),'get_project',False),
  'pilo_scan_project':('Scan allowed text files and update derived context',schema(PROJECT,PROJECT),'scan',True),
  'pilo_get_context':('Build authorized immutable context',schema(dict(PROJECT,query=STR,max_tokens={'type':'integer','minimum':1,'maximum':32768},idempotency_key=STR,execution_id=STR),('project_id','query')),'retrieve',False),
+ 'pilo_search_evidence':('Find scoped evidence handles without injecting source bodies',schema(dict(PROJECT,query=STR,limit={'type':'integer','minimum':1,'maximum':10}),('project_id','query')),'search_evidence',False),
+ 'pilo_get_evidence':('Export explicitly selected source excerpts as an immutable Snapshot',schema(dict(PROJECT,query=STR,unit_ids={'type':'array','items':STR,'minItems':1,'maxItems':8,'uniqueItems':True},max_bytes={'type':'integer','minimum':256,'maximum':8192}),('project_id','query','unit_ids')),'get_evidence',False),
  'pilo_get_snapshot':('Read preserved context using current permissions',schema({'snapshot_id':STR},('snapshot_id',)),'snapshot',False),
  'pilo_get_execution':('Read an authorized execution',schema({'execution_id':STR},('execution_id',)),'execution_detail',False),
  'pilo_scheduler_tick':('Run at most one approved CODE step',schema({'execution_id':STR},('execution_id',)),'scheduler_tick',True),
@@ -45,6 +47,11 @@ def validate(arguments,definition):
         rules=definition['properties'][key]
         if rules['type']=='string' and (not isinstance(value,str) or len(value)<rules.get('minLength',0) or len(value)>rules.get('maxLength',10000)):raise ProtocolError(-32602,'Invalid string argument')
         if rules['type']=='integer' and (isinstance(value,bool) or not isinstance(value,int) or not rules.get('minimum',0)<=value<=rules.get('maximum',32768)):raise ProtocolError(-32602,'Invalid integer argument')
+        if rules['type']=='array':
+            if (not isinstance(value,list) or not rules.get('minItems',0)<=len(value)<=rules.get('maxItems',8)
+                or any(not isinstance(item,str) or not 1<=len(item)<=128 for item in value)
+                or len(set(value))!=len(value)):
+                raise ProtocolError(-32602,'Invalid evidence handles')
         if 'enum' in rules and value not in rules['enum']:raise ProtocolError(-32602,'Invalid enum argument')
 
 class Server:
@@ -115,7 +122,7 @@ class Server:
             if params.get('name')!='pilo-start-task':raise ProtocolError(-32602,'Unknown prompt')
             arguments=params.get('arguments',{});validate(arguments,schema(PROJECT,PROJECT))
             self.workspace.get_project(self.actor,arguments['project_id'])
-            return {'messages':[{'role':'user','content':{'type':'text','text':'Use pilo_get_context for project '+arguments['project_id']+'; preserve source references and disclose insufficient context.'}}]}
+            return {'messages':[{'role':'user','content':{'type':'text','text':'Use pilo_search_evidence for project '+arguments['project_id']+' only when evidence is needed; fetch selected handles with pilo_get_evidence. Do not prefetch bulk context. Preserve source hashes and disclose insufficient evidence.'}}]}
         raise ProtocolError(-32601,'Method not found')
 
 def serve(config,source=sys.stdin,target=sys.stdout):
