@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import re
 
+from .ai_core_gate import AIBinding
 from .ai_scope import validate_ai_scope
 from .ai_evidence import verify_evidence, EvidenceRejected
 from .storage import ContentStore
