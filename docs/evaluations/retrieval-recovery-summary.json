@@ -1,0 +1,315 @@
+{
+  "format": "pilo.retrieval-reevaluation.v1",
+  "implementation_commit": "b6fe7cb2c44c72ffb792f46b18af696a99623fb8",
+  "prior_commit": "901c26cd1ba08c52e0fdb9b68bbf636e9f880e39",
+  "source_manifest_sha256": "c8e9b07391edc93e487be2638eb4d906b35aa56e5a34e5f5fe4518e5adb9f56a",
+  "heldout_manifest_sha256": "6c1456822da4972f4ada6c3c7f596ec2e881ffc4cdf1315e6cd8fb828730e678",
+  "model": "gpt-6.1-sol",
+  "reasoning_effort": "low",
+  "session_plan_sha256": "9f9365c1bf5949639984fa972809c9a563c2b869348ced7150f238a05f173a93",
+  "order": [
+    "A-standard",
+    "A-pilo",
+    "B-pilo",
+    "B-standard"
+  ],
+  "sessions": [
+    {
+      "arm": "standard",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 73803,
+        "cached_input_tokens": 52608,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2339,
+        "reasoning_output_tokens": 9
+      },
+      "evidence_successes": 10,
+      "valid_quotes": 10,
+      "tasks": 10,
+      "session_id": "A-standard",
+      "block": "A",
+      "elapsed_seconds": 59.43099045900453,
+      "returncode": 0,
+      "timed_out": false,
+      "uncached_input_tokens": 21195,
+      "shell_commands": 3,
+      "mcp_calls": 0,
+      "repair": {
+        "passed": 34,
+        "failed": 0,
+        "complete": true,
+        "status": "tested",
+        "tests_executed": true,
+        "all_targeted_checks_passed": true
+      }
+    },
+    {
+      "arm": "pilo",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 93328,
+        "cached_input_tokens": 52736,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2415,
+        "reasoning_output_tokens": 72
+      },
+      "evidence_successes": 10,
+      "valid_quotes": 10,
+      "tasks": 10,
+      "session_id": "A-pilo",
+      "block": "A",
+      "elapsed_seconds": 65.26619045799453,
+      "returncode": 0,
+      "timed_out": false,
+      "uncached_input_tokens": 40592,
+      "shell_commands": 4,
+      "mcp_calls": 0,
+      "repair": {
+        "passed": 34,
+        "failed": 0,
+        "complete": true,
+        "status": "tested",
+        "tests_executed": true,
+        "all_targeted_checks_passed": true
+      }
+    },
+    {
+      "arm": "pilo",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 72934,
+        "cached_input_tokens": 35200,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 1466,
+        "reasoning_output_tokens": 0
+      },
+      "evidence_successes": 10,
+      "valid_quotes": 10,
+      "tasks": 10,
+      "session_id": "B-pilo",
+      "block": "B",
+      "elapsed_seconds": 40.05107283300458,
+      "returncode": 0,
+      "timed_out": false,
+      "uncached_input_tokens": 37734,
+      "shell_commands": 3,
+      "mcp_calls": 0,
+      "repair": {
+        "status": "patch_application_rejected",
+        "tests_executed": false,
+        "all_targeted_checks_passed": false
+      }
+    },
+    {
+      "arm": "standard",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 72924,
+        "cached_input_tokens": 35456,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 1814,
+        "reasoning_output_tokens": 49
+      },
+      "evidence_successes": 10,
+      "valid_quotes": 10,
+      "tasks": 10,
+      "session_id": "B-standard",
+      "block": "B",
+      "elapsed_seconds": 48.63553587500064,
+      "returncode": 0,
+      "timed_out": false,
+      "uncached_input_tokens": 37468,
+      "shell_commands": 3,
+      "mcp_calls": 0,
+      "repair": {
+        "passed": 8,
+        "failed": 1,
+        "complete": true,
+        "status": "tested",
+        "tests_executed": true,
+        "all_targeted_checks_passed": false
+      }
+    }
+  ],
+  "aggregate": {
+    "standard": {
+      "evidence_successes": 20,
+      "tasks": 20,
+      "input_tokens": 146727,
+      "cached_input_tokens": 88064,
+      "uncached_input_tokens": 58663,
+      "output_tokens": 4153,
+      "elapsed_seconds": 108.06652633400518,
+      "shell_commands": 6,
+      "mcp_calls": 0,
+      "strict_repair_successes": 1,
+      "repair_trials": 2
+    },
+    "pilo": {
+      "evidence_successes": 20,
+      "tasks": 20,
+      "input_tokens": 166262,
+      "cached_input_tokens": 87936,
+      "uncached_input_tokens": 78326,
+      "output_tokens": 3881,
+      "elapsed_seconds": 105.31726329099911,
+      "shell_commands": 7,
+      "mcp_calls": 0,
+      "strict_repair_successes": 1,
+      "repair_trials": 2
+    }
+  },
+  "retrieval": {
+    "prior": {
+      "tasks": 20,
+      "mean_recall": 0.3,
+      "mean_precision": 0.20833333333333334,
+      "mrr": 0.21666666666666665,
+      "mean_seconds": 0.008873431249230634,
+      "context_bytes": 33902,
+      "replay_equal": 20,
+      "evidence_integrity_valid": 20,
+      "failures": 0
+    },
+    "recovered": {
+      "tasks": 20,
+      "mean_recall": 0.95,
+      "mean_precision": 0.2375,
+      "mrr": 0.8,
+      "mean_seconds": 0.010755806399538414,
+      "context_bytes": 153783,
+      "replay_equal": 20,
+      "evidence_integrity_valid": 20,
+      "failures": 0
+    },
+    "on_demand": {
+      "top1_recall": 0.65,
+      "top3_recall": 0.95,
+      "top5_recall": 1.0,
+      "evidence_file_recall": 0.95,
+      "anchor_present": 0.55,
+      "elapsed_seconds": 0.011873189499601722,
+      "context_bytes": 36553,
+      "metadata_bytes": 26854,
+      "snapshot_replays": 20,
+      "budget_per_request_bytes": 2048
+    },
+    "fresh_state_repetitions": 3,
+    "all_20_contexts_identical_across_fresh_states": true,
+    "prior_indexed_files": 33,
+    "recovered_indexed_files": 46
+  },
+  "release": {
+    "unit_executed": 102,
+    "unit_passed": 101,
+    "unit_skipped": 1,
+    "sql_passed": 143,
+    "checkout_pairs_passed": 8,
+    "checkpoint_verified": true,
+    "diagnostic_profiles_passed": 3,
+    "wheel_build": "passed",
+    "wheel_smoke": "passed",
+    "ci_run": 43592362589,
+    "ci_status": "success"
+  },
+  "invalid_preflight": {
+    "status": "invalid_preflight_not_used_for_effectiveness",
+    "reason": "Ambiguous execution-tool prohibition blocked standard shell inspection while MCP reads remained available.",
+    "plan_sha256": "0afd95efc85d94639195db54d03ff8e849ab5e67762c8bcbb28116cae0078a59",
+    "sessions": [
+      {
+        "session": "A-standard",
+        "usage": {
+          "input_tokens": 70394,
+          "cached_input_tokens": 20992,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 568,
+          "reasoning_output_tokens": 86
+        },
+        "elapsed_seconds": 20.95304845800274,
+        "events_sha256": "c355488793bee92ebfee78276a21d63f29993fa5e4b4d571f9b5c57602ec2581"
+      },
+      {
+        "session": "A-pilo",
+        "usage": {
+          "input_tokens": 286733,
+          "cached_input_tokens": 245376,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2805,
+          "reasoning_output_tokens": 533
+        },
+        "elapsed_seconds": 90.13399304199993,
+        "events_sha256": "daf451c45b9662712be21359fe43566944fb4453aa57d83d5c1ae87d67dab410"
+      }
+    ]
+  },
+  "oracle_correction": {
+    "reason": "Task requires rejecting invalid monetary inputs but does not prescribe ValueError/TypeError. Existing domain BudgetError also satisfies the stated contract. Accept it uniformly for both arms; preserve strict preflight logs.",
+    "old_oracle_sha256": "34d51d1e43cba3c646455c6f6c46611c0e4ea56950a91b2666cab246c517628f",
+    "contract_oracle_sha256": "cb920d4484b95d921010f2c47d65d963b720289a39a8dade8509991720a4d59c",
+    "agent_rerun": false
+  },
+  "native_environment": {
+    "added_test_only_dependency": "watchdog==6.0.0",
+    "unmodified_baseline_exit": 133,
+    "baseline_summary_complete": false,
+    "original_project_modified": false
+  },
+  "decision": "Do not expand automatic context retrieval. Retain minimal explicit deterministic search and Snapshot export; practical repeatable benefit is not demonstrated.",
+  "limitations": [
+    "Two counterbalanced task blocks, not independent repeated repairs on the same task.",
+    "Valid agents never invoked the optional PILO MCP tools; no downstream improvement can be attributed to evidence retrieval.",
+    "Model alias and effort pinned, but immutable backend weight revision is not exposed.",
+    "R2 has a strict patch-application rejection in one arm and a native-watcher baseline/environment issue in the other.",
+    "One initial prompt preflight was invalid; its costs and evidence are retained separately. A grading exception-subtype mismatch was corrected uniformly without rerunning agents.",
+    "Gold file/anchor metrics are syntactic proxies, and wall/uncached-token values are not dollar costs."
+  ],
+  "artifact_sha256": {
+    "heldout.private.json": "6c1456822da4972f4ada6c3c7f596ec2e881ffc4cdf1315e6cd8fb828730e678",
+    "baseline-diagnosis.json": "b13091a1c8d08a107470c2f836ca353c4f5fa0fea8cd4ceaf5d4e5d3d6fcaffd",
+    "baseline-checkout.log": "ef66b7dde892b7517a446a8b4f2e5024348f30426701a917602de56073925b3c",
+    "checkout-fixed.json": "4426ecbbbca83ccf8a6a1c9007d2f867fd0d91f653e60543961917f091105e10",
+    "sql-results.json": "e812dcae69697f54a114b69881c048b76bbfacb338f31fb3ebabf32dc87ade73",
+    "wheel-smoke.json": "0c23dab28612bc973f6015297cdd62b3f2944b1633888a0f98d94ebe9aee2535",
+    "on-demand-profile.private.json": "9818fe1549eddd1c7e5fe8193d76b657e7c184f359a173800e8d31175719e8db",
+    "invalid-preflight.private.json": "86dc8b70a65ce322721fe3806b07e0cd2b14419393e494cf4d3c0e7c7d4c4e9b",
+    "oracle-contract-correction.private.json": "4ee907332670cd27a8e5fa720fb693f18125928b8b9f4eb278cc3072969bcc57",
+    "oracle-baseline-native.log": "fb7e03a6e3f483c5e6051f0805fd36b702d7ba89ad5816aab1cf72f0aea4a156",
+    "watcher-matched-baseline-native.log": "dfa3476846ce31adf8b1496b34595fb3f5ca2adf22b6df8ca2264c718b985cd9",
+    "retrieval-repeat-summary.private.json": "b908c551c77e31142883866a2770046f51770c92ebb32cc400f632688b11462e",
+    "prior-retrieval/results.sqlite3": "ece3cac9f265d170582e073b8212bd32a9e624bf8f79d5d309a55ea366e7a5d2",
+    "new-retrieval-final/results.sqlite3": "30278c60dacfa335ccec3af95242a9f3c039a5ed6bc11e22aedf18685aba8c1a",
+    "counterbalanced-v2/evaluation-final.private.sqlite3": "3fd0fa3efa2c7a00d84969622e66d755203cae1102860935b12ad0e0478e6e0d",
+    "counterbalanced-v2/session-plan.private.json": "9f9365c1bf5949639984fa972809c9a563c2b869348ced7150f238a05f173a93",
+    "counterbalanced-v2/sessions/A-standard/prompt.private.txt": "515c19830dc173f2c6b63ef58b777d07e55b3b4e6228648c78cada0f836b7cb1",
+    "counterbalanced-v2/sessions/A-standard/events.private.jsonl": "482cddd71523ebe0ba213c1e69957866bae01ea43c47e6152169a5d2375c59ad",
+    "counterbalanced-v2/sessions/A-standard/answer.private.json": "4b0b17445a87a672061d119d9456c8aa429ec0fde0b4b8fea40fd75ec32c2fea",
+    "counterbalanced-v2/sessions/A-standard/timing.private.json": "830e1330556a6a7cd2de6554f94aa2bbecd377d6a0e0ce652ad769be51af1cfa",
+    "counterbalanced-v2/sessions/A-standard/repair-contract-tests.private.log": "8e69d57a434a9ccce1222be514bddd4999b59908ffd0cb90d80b74859019dd86",
+    "counterbalanced-v2/sessions/A-pilo/prompt.private.txt": "515c19830dc173f2c6b63ef58b777d07e55b3b4e6228648c78cada0f836b7cb1",
+    "counterbalanced-v2/sessions/A-pilo/events.private.jsonl": "7157a5ff8ca8266c05c25f50ed642532692548e33b345e70cdaaa5853272964a",
+    "counterbalanced-v2/sessions/A-pilo/answer.private.json": "7df8e87187e3fd84a78109f4cb579470761da41c96fc9600176ca0bd17369b04",
+    "counterbalanced-v2/sessions/A-pilo/timing.private.json": "73eb854769d5d0b832b711cf5d8afdbc8acc916cacfafc8df23267b970176cd9",
+    "counterbalanced-v2/sessions/A-pilo/repair-contract-tests.private.log": "32b31d934a5061575b001d22e5b008ebc7f71123662fc07fcc0101c3ebe916b5",
+    "counterbalanced-v2/sessions/B-pilo/prompt.private.txt": "7bcd84f3562d84c778a57ed7ee87a0f58228b2ba792562dd065250806343ee6b",
+    "counterbalanced-v2/sessions/B-pilo/events.private.jsonl": "b798f45edc8343a14b6c43949f3f827fc81fa61463eb96ebd99c269697cbacf1",
+    "counterbalanced-v2/sessions/B-pilo/answer.private.json": "d3f4c08813b45a1c971613eca77ee9f03f48cbf63c45c69996a864fc9e73018c",
+    "counterbalanced-v2/sessions/B-pilo/timing.private.json": "a9358d84f81213af5c3c9f1826261bc3660bd870105705685be874234f5967b7",
+    "counterbalanced-v2/sessions/B-pilo/repair-contract-tests.private.log": "6c4e58634ab10e0b6e9eec279dba91a72305207f6d103b84a9b0327a0d59c203",
+    "counterbalanced-v2/sessions/B-pilo/patch-application.private.json": "14ce80e1a6e77706e33279f6939fc97178474fe67b7b075b643d4bdb881014e0",
+    "counterbalanced-v2/sessions/B-standard/prompt.private.txt": "7bcd84f3562d84c778a57ed7ee87a0f58228b2ba792562dd065250806343ee6b",
+    "counterbalanced-v2/sessions/B-standard/events.private.jsonl": "4fca595f7109ea007b5083234882446b4e30e74f7fc08b125b37a9333aac6e6e",
+    "counterbalanced-v2/sessions/B-standard/answer.private.json": "0e44e31f96603b4ac40f6a6237f34e7ab7464c05522705c6038f9bf04ce120ae",
+    "counterbalanced-v2/sessions/B-standard/timing.private.json": "557e174edd3e3d9b2176c8fca69ccd13d0293fb2d7b59c98f46d0671379dfeb5",
+    "counterbalanced-v2/sessions/B-standard/repair-contract-tests.private.log": "9163c4118aeb71bf3ea0b9ca2406f7b957500bd7fb8dffc6d30a9108eb7b42e0",
+    "counterbalanced-v2/sessions/B-standard/patch-application.private.json": "36a1f690df612575b5aafc51c7e60924665d1195364497aafb79a3df17314652",
+    "final-sql-results.json": "e812dcae69697f54a114b69881c048b76bbfacb338f31fb3ebabf32dc87ade73"
+  },
+  "post_report_unit_tests": {
+    "executed": 102,
+    "passed": 101,
+    "skipped": 1,
+    "log_sha256": "1745467bce93721a1471caffcd9289b05825d686cb5152599b4d634ec61d8a44"
+  }
+}

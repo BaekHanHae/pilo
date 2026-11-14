@@ -41,7 +41,7 @@ class RetrievalRecoveryTests(unittest.TestCase):
 
     def test_reference_survives_many_large_reports_under_budget(self):
         self.install({'reference/architecture.md':'Snapshot contract authoritative definition',
-            **{f'reports/{n:02}.md':('Snapshot repeated report data.\n'*1800) for n in range(8)}})
+            **{f'archive/reports/{n:02}.md':('Snapshot repeated report data.\n'*1800) for n in range(8)}})
         result = self.core.retrieve('pilo-reader',self.project,'Snapshot',max_tokens=4096)
         self.assertIn('[reference/architecture.md]',result['content'])
         self.assertLessEqual(result['context_bytes'],4096)
