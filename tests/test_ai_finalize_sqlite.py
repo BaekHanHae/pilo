@@ -27,6 +27,9 @@ class FakeCore:
         if actor != "operator":
             raise PermissionError("denied")
 
+    def _verify_audit(self, db):
+        pass
+
     def _audit(self, db, actor, action, resource, details, now):
         if self.audit_fails:
             raise RuntimeError("audit failed")

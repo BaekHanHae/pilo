@@ -53,6 +53,13 @@ def finalize_ai_attempt(
         raise FinalizeRejected("Invalid revision")
     if result_phase not in ("COMPLETED", "FAILED", "UNCERTAIN"):
         raise FinalizeRejected("Unsupported result phase")
+    if result_phase == "UNCERTAIN":
+        from .ai_recovery import mark_ai_uncertain
+        return mark_ai_uncertain(
+            core, actor=actor, attempt_id=attempt_id, project_id=project_id,
+            execution_id=execution_id, step_id=step_id,
+            fencing_token=fencing_token, expected_revision=expected_revision,
+            now=now, reason="Unknown execution effects")
     if result_phase != "UNCERTAIN" and (
         not isinstance(evidence_ref, str) or not evidence_ref.strip()
         or not isinstance(evidence_sha256, str)

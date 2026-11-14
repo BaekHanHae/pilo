@@ -40,3 +40,8 @@ CREATE TABLE AIReconciliationRecord (
 ) STRICT;
 
 CREATE INDEX idx_ai_review_attempt ON AIReconciliationRecord(attempt_id);
+
+CREATE TRIGGER ai_review_immutable_update BEFORE UPDATE ON AIReconciliationRecord
+BEGIN SELECT RAISE(ABORT,'Immutable AI review'); END;
+CREATE TRIGGER ai_review_immutable_delete BEFORE DELETE ON AIReconciliationRecord
+BEGIN SELECT RAISE(ABORT,'Immutable AI review'); END;
