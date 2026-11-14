@@ -45,3 +45,22 @@ CREATE TRIGGER ai_review_immutable_update BEFORE UPDATE ON AIReconciliationRecor
 BEGIN SELECT RAISE(ABORT,'Immutable AI review'); END;
 CREATE TRIGGER ai_review_immutable_delete BEFORE DELETE ON AIReconciliationRecord
 BEGIN SELECT RAISE(ABORT,'Immutable AI review'); END;
+
+CREATE TABLE AIEvidenceRecord (
+    evidence_id TEXT PRIMARY KEY NOT NULL,
+    attempt_id TEXT NOT NULL REFERENCES AIAttemptRecord(attempt_id),
+    project_id TEXT NOT NULL REFERENCES Project(project_id),
+    execution_id TEXT NOT NULL,
+    step_id TEXT NOT NULL,
+    fencing_token INTEGER NOT NULL CHECK(fencing_token > 0),
+    attempt_revision INTEGER NOT NULL CHECK(attempt_revision >= 0),
+    content_digest TEXT NOT NULL CHECK(length(content_digest)=64 AND content_digest NOT GLOB '*[^0-9a-f]*'),
+    checkpoint_id TEXT NOT NULL REFERENCES Checkpoint(checkpoint_id),
+    observation_digest TEXT NOT NULL CHECK(length(observation_digest)=64),
+    created_at TEXT NOT NULL,
+    FOREIGN KEY(execution_id,step_id) REFERENCES ExecutionStep(execution_id,step_id)
+) STRICT;
+CREATE TRIGGER ai_evidence_immutable_update BEFORE UPDATE ON AIEvidenceRecord
+BEGIN SELECT RAISE(ABORT,'Immutable AI evidence'); END;
+CREATE TRIGGER ai_evidence_immutable_delete BEFORE DELETE ON AIEvidenceRecord
+BEGIN SELECT RAISE(ABORT,'Immutable AI evidence'); END;

@@ -74,3 +74,7 @@ The Japanese and Korean READMEs explain the product and quick start; they are no
 ## License
 
 PILO-owned code and documentation are licensed under [MIT](LICENSE). Optional dependencies retain their own licenses, including Graphify's Apache-2.0 notices. See [third-party notices](THIRD_PARTY_NOTICES.md). No model weights, private project data, or original private conversations are distributed.
+
+AI Gateway work remains disabled and unmerged. See the
+[implementation and verification status](docs/ai_gateway_implementation_status.md)
+for candidate recovery/evidence controls and unresolved release gates.

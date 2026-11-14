@@ -2,7 +2,7 @@
 from .core import now
 
 # Exact permission inventory; no wildcard role or automatic grants.
-PERMISSIONS=('ai.reconcile','ai.run','vector.read','graph.read','project.create','project.read','project.list','files.scan','context.read','common.read',
+PERMISSIONS=('ai.evidence','ai.reconcile','ai.run','vector.read','graph.read','project.create','project.read','project.list','files.scan','context.read','common.read',
  'knowledge.write','knowledge.approve','knowledge.promote','common.write','checkpoint.create',
  'checkpoint.read','recovery.run','index.rebuild','skill.approve','code.run','execution.run','execution.read',
  'memory.write','memory.read','diagnostics.run','diagnostics.read','error.write','error.read','model.record','approval.request','approval.decide')

@@ -8,7 +8,6 @@ import re
 
 from .ai_core_gate import AIBinding
 from .ai_scope import validate_ai_scope
-from .ai_evidence import verify_evidence, EvidenceRejected
 from .storage import ContentStore
 
 
@@ -38,10 +37,9 @@ def finalize_ai_attempt(
 ) -> None:
     """Finalize with fence, revision, identity, permission and audit checks.
 
-    Evidence is read directly from a Core-owned ContentStore, never from an
-    adapter-provided reader or boolean assertion. Workspace effects and
-    provenance still require separate verification. UNCERTAIN is
-    intentionally permitted without evidence and blocks automatic retries.
+    Registered evidence is read from installation-owned storage inside the
+    transaction and bound to an unchanged sealed checkpoint. Write/external
+    effects fail closed. UNCERTAIN uses independent recovery authorization.
     """
     if not all(isinstance(v, str) and v.strip() for v in (
         actor, attempt_id, project_id, execution_id, step_id, now
@@ -67,15 +65,8 @@ def finalize_ai_attempt(
     ):
         raise FinalizeRejected("Verified result requires evidence reference and digest")
 
-    if result_phase != "UNCERTAIN":
-        if not isinstance(content_store, ContentStore):
-            raise FinalizeRejected("Core ContentStore required for finalization")
-        if evidence_ref != evidence_sha256:
-            raise FinalizeRejected("Evidence reference must be the CAS digest")
-        try:
-            verify_evidence(evidence_ref, evidence_sha256, content_store.get)
-        except (EvidenceRejected, OSError, ValueError) as exc:
-            raise FinalizeRejected("CAS evidence verification failed") from exc
+    if content_store is not None:
+        raise FinalizeRejected("Caller-provided content stores are not trusted")
 
     with core.connection(write=True) as db:
         core._authorize(db, actor, "ai.run", project_id)
@@ -106,6 +97,11 @@ def finalize_ai_attempt(
             expected_context_hash=binding.context_hash if binding else None,
             expected_policy_version=binding.policy_version if binding else None,
         )
+        from .ai_provenance import verify_registered
+        core._verify_audit(db)
+        verify_registered(core, db, evidence_ref, evidence_sha256, attempt_id,
+                          project_id, execution_id, step_id, fencing_token,
+                          expected_revision, effect_class, checkpoint_id)
         updated = db.execute(
             """UPDATE AIAttemptRecord SET phase=?, evidence_ref=?,
                       revision=revision+1,updated_at=?

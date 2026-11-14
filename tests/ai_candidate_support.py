@@ -2,6 +2,7 @@
 
 Only tests accept the augmented shape. Production Core still rejects it.
 """
+from contextlib import closing
 from pathlib import Path
 import sqlite3
 from pilo_core.core import Core, schema_shape
@@ -15,7 +16,7 @@ CANDIDATE = Path(__file__).resolve().parents[1] / 'pilo_core/sql/0003_ai_attempt
 class CandidateCore(Core):
     def __init__(self, config_path):
         super().__init__(config_path)
-        with sqlite3.connect(':memory:') as db:
+        with closing(sqlite3.connect(':memory:')) as db:
             for _, _, path, _ in self.migrations:
                 db.executescript(path.read_text())
             db.executescript(CANDIDATE.read_text())
