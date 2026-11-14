@@ -19,6 +19,7 @@ jobs:
       - run: mkdir -p build/ci-results
       - run: python tools/validate_schema.py --report build/ci-results/sql-tests.json
       - run: python -m unittest discover -s tests -v 2>&1 | tee build/ci-results/application-tests.txt
+        shell: bash
       - run: python tools/evaluate_checkout.py --report build/ci-results/project-evaluation.json
       - run: python -m pip wheel --no-deps . --wheel-dir dist
       - name: Verify installed distribution outside source checkout

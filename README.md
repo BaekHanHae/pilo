@@ -74,3 +74,12 @@ The Japanese and Korean READMEs explain the product and quick start; they are no
 ## License
 
 PILO-owned code and documentation are licensed under [MIT](LICENSE). Optional dependencies retain their own licenses, including Graphify's Apache-2.0 notices. See [third-party notices](THIRD_PARTY_NOTICES.md). No model weights, private project data, or original private conversations are distributed.
+
+## Practical evaluation
+
+The [PILO Practical Evaluation Report](docs/PILO_PRACTICAL_EVALUATION_REPORT.md)
+compares standard and PILO-assisted Codex on a pinned learning-platform snapshot.
+The initial pilot found equal task outcomes with higher token usage for the PILO
+arm. Read-only snapshots remain a focused experiment; AI Gateway work is not a
+prerequisite. The [local evaluation harness](tools/practical_eval/README.md) uses
+Python and SQLite and does not add a dependency to the evaluated project.
