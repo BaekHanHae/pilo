@@ -22,13 +22,19 @@ Branch: `feature/pilo-skills-ai-gateway`.
 6. Reconciliation requires operator review and durable evidence. Replay, rollback, and rebuild remain separate Core operations.
 7. No CLI-specific session state is authoritative; cross-agent handoff manifests are untrusted inputs until Core verifies scope and evidence.
 
-## Explicitly unimplemented
+## Current implementation record
+
+See [AI Gateway implementation status](ai_gateway_implementation_status.md) for
+executed regression results, recovery transactions and conservative evidence gates.
+This original proposal does not establish release readiness.
+
+## Remaining integration work
 
 - No new schema or migration.
 - No scheduler integration.
-- No authenticated approval lookup.
+- No production AI scheduler/approval integration.
 - No process spawn or CLI discovery.
-- No durable reconciliation or worktree restoration.
+- No automatic startup reconciliation or worktree restoration.
 - No end-to-end test.
 
 ## Verification
