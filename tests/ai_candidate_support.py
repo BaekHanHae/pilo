@@ -23,7 +23,7 @@ class CandidateCore(Core):
             self.expected_shape = schema_shape(db)
 
 
-def install(root):
+def install(root, seed=True):
     initialize(root / 'instance')
     config = root / 'instance/database_config.json'
     core = Core(config)
@@ -40,7 +40,16 @@ def install(root):
             VALUES('e','PROJECT',?,'SYSTEM','system','AI','t','t')""", (project,))
         db.execute("""INSERT INTO ExecutionStep(step_id,execution_id,step_number,
             step_key,step_type,name) VALUES('s','e',1,'s','AI','Test')""")
+        if not seed:
+            return core, project, other
+        db.execute("""INSERT INTO ApprovalRequest(approval_context_hash,
+            policy_version_ref,approval_id,execution_id,resource_type,resource_id,
+            action,status,requested_by,requested_at)
+            VALUES('hash','policy','approval','e','WORKSPACE','resource',
+            'ai.run','PENDING','system','2026-01-01')""")
+        db.execute("INSERT INTO ApprovalDecision VALUES('decision','approval','reviewer','APPROVE','Test approval','2026-01-02')")
+        db.execute("INSERT INTO ApprovalGrant VALUES('approval',?,'{}',NULL)", (project,))
         db.execute("""INSERT INTO AIAttemptRecord VALUES(
-            'a',?,'e','s','test','EXTERNAL','RUNNING',4,NULL,NULL,?,NULL,'t','t',1)""",
+            'a',?,'e','s','test','EXTERNAL','RUNNING',4,'approval',NULL,?,NULL,'t','t',1)""",
             (project, 'a' * 64))
     return core, project, other
