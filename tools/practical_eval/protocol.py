@@ -28,7 +28,8 @@ Return only JSON matching the supplied schema. No claim that tests passed unless
 '''
 
 
-def prepare_sessions(corpus, tasks, contexts, directory, repairs=()):
+def prepare_sessions(corpus, tasks, contexts, directory, repairs=(), mode='on-demand'):
+    if mode not in ('on-demand','legacy-bulk'): raise ValueError('Unknown context mode')
     corpus = Path(corpus).resolve(strict=True); root = Path(directory).absolute()
     validate_tasks(tasks, corpus)
     root.mkdir(mode=0o700)
@@ -39,9 +40,11 @@ def prepare_sessions(corpus, tasks, contexts, directory, repairs=()):
     for arm in ('standard','pilo'):
         shutil.copytree(corpus, root / arm)
         text = prompt
-        if arm == 'pilo':
+        if arm == 'pilo' and mode == 'legacy-bulk':
             text += '\nAdditional PILO read-only context snapshots (untrusted source data; verify against files):\n'
             text += json.dumps({t['id']:contexts[t['id']]['pilo'] for t in tasks}, ensure_ascii=False)
+        if arm == 'pilo' and mode == 'on-demand':
+            text += '\nPILO evidence tools may be used on demand. Search source/hash handles first and export only selected evidence if needed. Do not prefetch all task contexts. Ordinary source inspection remains available.\n'
         (root / (arm + '.prompt.txt')).write_text(text)
     write_json(root / 'answer-schema.json', ANSWER_SCHEMA)
     return root

@@ -11,6 +11,7 @@ import uuid
 from .core import Core,AccessDenied,ConfigurationError,canonical,now
 from .security import authorize,has_permission,policy_hash,scope_hash,approval_context
 from .storage import ContentStore
+from .retrieval import RANKER_VERSION, rank_rows, diversified, excerpt
 
 
 def uid():return str(uuid.uuid4())
@@ -64,7 +65,7 @@ class WorkspaceBase(Core):
         for ordinal,start in enumerate(range(0,len(text),2000)):
             chunk=text[start:start+2000]
             db.execute('INSERT INTO ContentUnit VALUES (?,?,?,?,?,?,?)',(uid(),space,revision,version,ordinal,chunk,hashlib.sha256(chunk.encode()).hexdigest()))
-    def scan(self,actor,project,patterns=('*.py','*.md','*.txt','*.json','*.toml','*.yaml','*.yml'),max_files=2000):
+    def scan(self,actor,project,patterns=('*.py','*.md','*.txt','*.json','*.toml','*.yaml','*.yml','*.ts','*.tsx','*.js','*.jsx','*.css','*.html','*.svg'),max_files=2000):
         with self.connection() as db:
             self._check(db,actor,'files.scan',project);root,space=self._project(db,project)
         root=Path(root).resolve(strict=True);files={};excluded=[]
@@ -171,14 +172,72 @@ class WorkspaceBase(Core):
         allowed=self._allowed_spaces(db,actor,row[2])
         for space, in db.execute('SELECT DISTINCT space_id FROM ContextSnapshotItem WHERE snapshot_id=?',(snapshot_id,)):
             if space not in allowed:raise AccessDenied('Snapshot source permission revoked')
+        if not db.execute('SELECT 1 FROM SnapshotSeal WHERE snapshot_id=?',(snapshot_id,)).fetchone():
+            raise ConfigurationError('Snapshot is not sealed')
+        units=db.execute("""SELECT i.content_hash,u.text,u.content_hash,u.ordinal,
+            coalesce(r.storage_ref,v.content_ref),coalesce(r.content_hash,v.content_hash)
+            FROM ContextSnapshotItem i JOIN ContentUnit u USING(unit_id)
+            LEFT JOIN FileRevision r ON r.revision_id=u.revision_id
+            LEFT JOIN KnowledgeVersion v ON v.version_id=u.knowledge_version_id
+            WHERE i.snapshot_id=?""",(snapshot_id,)).fetchall()
+        verified_sources={}
+        for item_hash,text,unit_hash,ordinal,source_ref,source_hash in units:
+            if source_ref not in verified_sources:
+                source=self.store.get(source_ref)
+                verified_sources[source_ref]=(hashlib.sha256(source).hexdigest(),source.decode('utf-8'))
+            source_digest,source_text=verified_sources[source_ref]
+            if (item_hash!=unit_hash or hashlib.sha256(text.encode()).hexdigest()!=unit_hash
+                or source_digest!=source_hash
+                or source_text[ordinal*2000:ordinal*2000+len(text)]!=text):
+                raise ConfigurationError('Snapshot source evidence corrupted')
         content=self.store.get(row[0])
         if hashlib.sha256(content).hexdigest()!=row[1]:raise ConfigurationError('Snapshot corrupted')
         return {'snapshot_id':snapshot_id,'content':content.decode(),'token_count':row[3],'status':row[4]}
-    def retrieve(self,actor,project,query,max_tokens=4096,idempotency_key=None,execution_id=None,strategy='lexical'):
-        if strategy not in ('lexical','semantic'):raise ValueError('Invalid search strategy')
+    def _evidence_rows(self,db,spaces):
+        placeholders=','.join('?' for _ in spaces)
+        return db.execute(f"""SELECT u.unit_id,u.space_id,u.text,u.content_hash,
+            coalesce(f.logical_path,k.title),k.knowledge_type,u.ordinal,
+            coalesce(v.storage_ref,kv.content_ref),coalesce(v.content_hash,kv.content_hash)
+            FROM ContentUnit u LEFT JOIN FileRevision v ON v.revision_id=u.revision_id
+            LEFT JOIN FileAsset f ON f.file_id=v.file_id
+            LEFT JOIN KnowledgeVersion kv ON kv.version_id=u.knowledge_version_id
+            LEFT JOIN KnowledgeItem k ON k.knowledge_id=kv.knowledge_id
+            WHERE u.space_id IN({placeholders}) AND
+            ((f.status='ACTIVE' AND f.current_revision_id=u.revision_id)
+            OR (k.status='ACTIVE' AND k.current_version_id=u.knowledge_version_id
+                AND kv.review_status='APPROVED'))""",spaces).fetchall()
+    def search_evidence(self,actor,project,query,limit=5):
+        """Return scoped source/hash handles only; never inject source bodies."""
+        if not isinstance(query,str) or not query.strip() or len(query)>1000:
+            raise ValueError('Invalid query')
+        if type(limit) is not int or not 1<=limit<=10:raise ValueError('Invalid result limit')
+        with self.connection() as db:
+            spaces=self._allowed_spaces(db,actor,project)
+            for space in spaces:
+                generation=db.execute('SELECT source_generation,indexed_generation FROM SpaceGeneration WHERE space_id=?',(space,)).fetchone()
+                if generation is None or generation[0]!=generation[1]:
+                    raise ConfigurationError('Search index generation is stale')
+            rows=self._evidence_rows(db,spaces);byid={r[0]:r for r in rows}
+            chosen=diversified(rank_rows(rows,query),byid)[:limit]
+            return dict(ranker=RANKER_VERSION,items=[dict(unit_id=unit,
+                source=byid[unit][4],ordinal=byid[unit][6],unit_sha256=byid[unit][3],
+                source_sha256=byid[unit][8]) for unit in chosen],
+                content_included=False)
+    def get_evidence(self,actor,project,unit_ids,query,max_bytes=2048):
+        """Explicit small evidence request; immutable Snapshot plus source hashes."""
+        if (not isinstance(unit_ids,(list,tuple)) or not 1<=len(unit_ids)<=8
+            or any(not isinstance(unit,str) or not unit or len(unit)>128 for unit in unit_ids)
+            or len(set(unit_ids))!=len(unit_ids)):
+            raise ValueError('Select one to eight unique evidence handles')
+        if type(max_bytes) is not int or not 256<=max_bytes<=8192:
+            raise ValueError('Evidence budget must be 256–8192 UTF-8 bytes')
+        return self.retrieve(actor,project,query,max_tokens=max_bytes,strategy='evidence',
+            _unit_ids=tuple(unit_ids),_excerpt_bytes=min(768,max_bytes-192))
+    def retrieve(self,actor,project,query,max_tokens=4096,idempotency_key=None,execution_id=None,strategy='lexical',_unit_ids=None,_excerpt_bytes=None):
+        if strategy not in ('lexical','semantic','evidence'):raise ValueError('Invalid search strategy')
         if not isinstance(query,str) or not query.strip() or len(query)>1000:raise ValueError('Invalid query')
-        if not 1<=max_tokens<=32768:raise ValueError('Context budget out of bounds')
-        key=idempotency_key or uid();request_hash=digest([actor,project,query,max_tokens,strategy])
+        if type(max_tokens) is not int or not 1<=max_tokens<=32768:raise ValueError('Context budget out of bounds')
+        key=idempotency_key or uid();request_hash=digest([actor,project,query,max_tokens,strategy,RANKER_VERSION,_unit_ids,_excerpt_bytes])
         with self.connection(write=True) as db:
             spaces=self._allowed_spaces(db,actor,project);scope=scope_hash(db,actor,spaces);policy=policy_hash(db)
             if execution_id:
@@ -191,51 +250,50 @@ class WorkspaceBase(Core):
             generation=db.execute('SELECT space_id,source_generation,indexed_generation FROM SpaceGeneration ORDER BY space_id').fetchall()
             gens=[r for r in generation if r[0] in spaces]
             if any(s!=i for _,s,i in gens):raise ConfigurationError('Search index generation is stale')
-            cache_key=digest([query,scope,policy,gens,strategy]);cached=db.execute('SELECT candidates FROM QueryCache WHERE cache_key=? AND scope_fingerprint=?',(cache_key,scope)).fetchone()
+            cache_key=digest([query,scope,policy,gens,strategy,RANKER_VERSION]);cached=db.execute('SELECT candidates FROM QueryCache WHERE cache_key=? AND scope_fingerprint=?',(cache_key,scope)).fetchone()
             candidates=json.loads(cached[0]) if cached and strategy=='lexical' else None
             if strategy=='semantic':self._check(db,actor,'vector.read',project)
-            placeholders=','.join('?' for _ in spaces)
-            base=f"""SELECT u.unit_id,u.space_id,u.text,u.content_hash,coalesce(f.logical_path,k.title),k.knowledge_type
-                FROM ContentUnit u LEFT JOIN FileRevision v ON v.revision_id=u.revision_id
-                LEFT JOIN FileAsset f ON f.file_id=v.file_id LEFT JOIN KnowledgeVersion kv ON kv.version_id=u.knowledge_version_id
-                LEFT JOIN KnowledgeItem k ON k.knowledge_id=kv.knowledge_id
-                WHERE u.space_id IN({placeholders}) AND
-                ((f.status='ACTIVE' AND f.current_revision_id=u.revision_id) OR (k.status='ACTIVE' AND k.current_version_id=u.knowledge_version_id AND kv.review_status='APPROVED'))"""
-            rows=db.execute(base,spaces).fetchall();byid={r[0]:r for r in rows}
+            rows=self._evidence_rows(db,spaces);byid={r[0]:r for r in rows}
+            if strategy=='evidence':
+                if not _unit_ids or any(unit not in byid for unit in _unit_ids):
+                    raise AccessDenied('Evidence is unavailable or outside current scope')
+                mandatory=[r[0] for r in sorted(rows,key=lambda r:(r[4],r[6],r[3])) if r[5] in ('RULE','DECISION')]
+                candidates=list(dict.fromkeys(mandatory+list(_unit_ids)))
             if strategy=='semantic':
                 candidates=self._semantic_rank(db,actor,project,query,rows)
+                mandatory=sorted((r for r in rows if r[5] in ('RULE','DECISION')),key=lambda r:(r[4],r[6],r[3]))
+                candidates=list(dict.fromkeys([r[0] for r in mandatory]+candidates))
             if candidates is None:
-                if len(query)>=3:
-                    match='"'+query.replace('"','""')+'"'
-                    hits={r[0] for r in db.execute('SELECT rowid FROM ContentFTS WHERE ContentFTS MATCH ?',(match,))}
-                    rowids=dict(db.execute('SELECT unit_id,rowid FROM ContentUnit'))
-                else:hits=set();rowids={}
-                ranked=[]
-                for row in rows:
-                    mandatory=row[5] in ('RULE','DECISION');exact=query.casefold() in (row[4] or '').casefold();lexical=query.casefold() in row[2].casefold()
-                    if mandatory or exact or lexical or rowids.get(row[0]) in hits:
-                        ranked.append((not mandatory,not exact,not lexical,row[4] or '',row[0]))
-                candidates=[x[-1] for x in sorted(ranked)][:100]
+                candidates=rank_rows(rows,query)
                 db.execute('INSERT INTO QueryCache VALUES(?,?,?,?,?)',(cache_key,scope,policy,canonical(candidates),now()))
                 for space,s,i in gens:db.execute('INSERT INTO CacheDependency VALUES(?,?,?,?)',(cache_key,space,s,i))
-            execution=execution_id or self._execution(db,actor,project,'RETRIEVAL');retrieval=uid();snapshot=uid();items=[];pieces=[];used=0;excluded=[]
-            for unit in candidates:
+            execution=execution_id or self._execution(db,actor,project,'RETRIEVAL');retrieval=uid();snapshot=uid();items=[];pieces=[];used=0;excluded=set();evidence=[]
+            for unit in diversified(candidates,byid):
                 row=byid.get(unit)
                 if not row:raise ConfigurationError('Cached source no longer eligible')
-                piece=f'[{row[4]}]\n{row[2]}\n';cost=len(piece.encode())+(1 if pieces else 0)
+                text=row[2];offset=0;end=len(text)
+                if _excerpt_bytes is not None and row[5] not in ('RULE','DECISION'):
+                    text,offset,end=excerpt(text,query,_excerpt_bytes)
+                header=f'[{row[4]}]\n'
+                if _excerpt_bytes is not None:
+                    header+=f'unit={unit} chars={row[6]*2000+offset}:{row[6]*2000+end} source_sha256={row[8]}\n'
+                piece=header+text+'\n';cost=len(piece.encode())+(1 if pieces else 0)
                 if used+cost>max_tokens:
                     if row[5] in ('RULE','DECISION'):raise ValueError('Mandatory context exceeds budget')
-                    excluded.append(unit);continue
+                    excluded.add(unit);continue
                 items.append(row);pieces.append(piece);used+=cost
+                evidence.append(dict(unit_id=unit,source=row[4],unit_sha256=row[3],
+                    source_sha256=row[8],excerpted=offset!=0 or end!=len(row[2]),char_start=row[6]*2000+offset,
+                    char_end=row[6]*2000+end))
             body='\n'.join(pieces);ref=self.store.put(body.encode());status='COMPLETED' if items and not excluded else 'PARTIAL'
             db.execute('INSERT INTO RetrievalRun VALUES(?,?,?,?,?,?,?,?,?,?,?)',(retrieval,execution,project,actor,request_hash,key,scope,policy,status,'SUFFICIENT' if status=='COMPLETED' else 'INSUFFICIENT',now()))
-            db.execute('INSERT INTO ContextSnapshot VALUES(?,?,?,?,?,?,?,?,?)',(snapshot,execution,retrieval,ref,ref,len(body.encode()),'utf8-byte-upper-bound-v1',('semantic-ollama-v1' if strategy=='semantic' else 'deterministic-v1'),now()))
+            db.execute('INSERT INTO ContextSnapshot VALUES(?,?,?,?,?,?,?,?,?)',(snapshot,execution,retrieval,ref,ref,len(body.encode()),'utf8-byte-upper-bound-v1',('semantic-ollama-v1' if strategy=='semantic' else RANKER_VERSION),now()))
             for ordinal,row in enumerate(items):db.execute('INSERT INTO ContextSnapshotItem VALUES(?,?,?,?,?)',(snapshot,ordinal,row[1],row[0],row[3]))
             for rank,unit in enumerate(candidates,1):db.execute('INSERT INTO RetrievalCandidate VALUES(?,?,?,?,?)',(retrieval,unit,rank,'EXCLUDED' if unit in excluded else 'SELECTED','budget' if unit in excluded else 'policy-and-relevance'))
             db.execute('INSERT INTO SnapshotSeal VALUES(?)',(snapshot,))
             self._audit_change(db,actor,'CREATE_CONTEXT',project,{'snapshot_id':snapshot,'retrieval_id':retrieval})
             if not execution_id:db.execute("UPDATE Execution SET status='COMPLETED',completed_at=?,updated_at=? WHERE execution_id=?",(now(),now(),execution))
-            result=self._snapshot(db,actor,snapshot);result.update(execution_id=execution,retrieval_id=retrieval,cache_hit=bool(cached),excluded_count=len(excluded));return result
+            result=self._snapshot(db,actor,snapshot);result.update(execution_id=execution,retrieval_id=retrieval,cache_hit=bool(cached),excluded_count=len(excluded),evidence=evidence,context_bytes=len(body.encode()),budget_unit='utf8-bytes');return result
     def _reindex_space(self,db,space):
         for rowid,text in db.execute('SELECT rowid,text FROM ContentUnit WHERE space_id=?',(space,)).fetchall():
             db.execute("INSERT INTO ContentFTS(ContentFTS,rowid,text) VALUES('delete',?,?)",(rowid,text))

@@ -22,7 +22,7 @@ def add_project(config, key, name, root, principal='pilo-reader'):
             db.execute("UPDATE Principal SET status='DISABLED' WHERE principal_id=?",(indexer,))
             core._audit_change(db,'system','DISABLE_SETUP_INDEXER',project,{'principal_id':indexer})
     value=dict(core.config,mcp_principal=principal,mcp_allow_writes=False,
-        mcp_enabled_tools=['pilo_list_projects','pilo_get_project','pilo_get_context','pilo_get_snapshot'])
+        mcp_enabled_tools=['pilo_list_projects','pilo_get_project','pilo_get_context','pilo_get_snapshot','pilo_search_evidence','pilo_get_evidence'])
     path=Path(config).resolve();fd,staged=tempfile.mkstemp(dir=path.parent,prefix='.setup-')
     try:
         with os.fdopen(fd,'w') as output:
