@@ -169,6 +169,22 @@ written by the evaluator, not by either evaluated agent; they were not blinded.
 | Graph/vector/agent orchestration and schema 3 | Defer expansion. None was necessary for this pilot, and no measured development benefit justifies added integration cost yet. Preserve isolated Draft work without activating it. |
 | Independent project usability | Preserve. No platform dependency on PILO, server, background process or data migration was added. |
 
+A separate corpus-growth check exposed another reliability problem. The pristine
+PILO main corpus passed all eight existing retrieval/source/replay subchecks. After
+the evaluator code and this report were added to the corpus, the existing checkout
+evaluation at `a885c63c160a2590796dde8996c7466b2728f485` passed seven of eight
+retrieval pairs: the Snapshot query omitted docs/specification.md. It aborted
+before checkpoint and diagnostic checks. Runtime retrieval code was unchanged.
+This is an introduced **self-retrieval regression due to corpus growth**, and is a
+merge blocker for this Draft PR, even though the unit and SQL suites pass.
+[GitHub Actions run 43589785696](https://github.com/BaekHanHae/pilo/actions/runs/43589785696)
+confirmed the checkout-evaluation failure in all four Ubuntu/macOS × Python
+3.11/3.14 jobs. Unit and SQL steps passed; wheel/install smoke steps were skipped
+because the preceding evaluation failed. They are not claimed verified here. Do not
+hide it by weakening the existing evaluator, excluding the report or tuning these
+queries. Relevance/packing must become robust to ordinary source/document growth
+before PILO can be relied on as an automatic context provider.
+
 Continued PILO development is justified **conditionally for a small read-only
 retrieval/evidence workflow**, not as a proven productivity platform. Keep the next
 investment bounded: expand safe source coverage, improve query handling and offer
@@ -185,7 +201,9 @@ Eight new evaluator tests use real Core/SQLite and synthetic source fixtures.
 SQL validation ran 143 tests successfully, with integrity OK and no foreign-key
 errors. CI explicitly uses Bash pipefail for the unittest/tee step so a failed
 suite cannot be hidden by successful log capture. Exact commit/CI results are
-recorded in the Draft PR; pending checks are not counted as passed.
+recorded in the Draft PR; pending checks are not counted as passed. The existing
+checkout evaluation failed on the added corpus as described above; a green unit
+suite does not establish a green release check.
 
 ## Reproduction and limitations
 

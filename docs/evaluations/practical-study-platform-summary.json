@@ -209,7 +209,8 @@
     "retrieval-valid/results.sqlite3": "811375389e0f856691c0af1052eaac81e60ac73d9312bb15375cf44d4490007f",
     "repository-provenance.private.json": "de8a54d297c65c66e7120a24dcc6323cd63567071f8de98b38d6ae0189b22a96",
     "standard-combined-tests.log": "9041bce15e2af5ddf63b48655d2069f8ce0bd15a3882a51749838366c589d2e0",
-    "pilo-combined-tests.log": "74ac67dca90de01633d6680fd4c1675c54cddd597b9cdd34f051b01acaf30f3c"
+    "pilo-combined-tests.log": "74ac67dca90de01633d6680fd4c1675c54cddd597b9cdd34f051b01acaf30f3c",
+    "pristine-main-evaluation.json": "bc03b9b9914c47ecaaf6d17ea653c3fc394b36a770b93916ebbd3904a77da023"
   },
   "integration": {
     "indexed_files": 33,
@@ -235,5 +236,26 @@
     "Capture-window time is a log timestamp proxy, not CPU time or per-task timing.",
     "Private task manifests and source content are retained locally, not published.",
     "No production deployment, real library data, or long-term maintenance outcomes were tested."
-  ]
+  ],
+  "self_retrieval_growth_check": {
+    "pristine_main_commit": "10c97f23bf2d60784aed19a19ea02982b6fff408",
+    "pristine_retrieval_pairs_passed": 8,
+    "total_pairs": 8,
+    "expanded_corpus_commit": "a885c63c160a2590796dde8996c7466b2728f485",
+    "expanded_retrieval_pairs_passed": 7,
+    "expanded_status": "failed",
+    "missed_query": "Snapshot",
+    "missing_expected_source": "docs/specification.md",
+    "checkpoint_and_diagnostics": "not_reached",
+    "merge_blocker": true
+  },
+  "initial_ci": {
+    "commit": "a885c63c160a2590796dde8996c7466b2728f485",
+    "run_id": 43589785696,
+    "jobs": 4,
+    "unit_steps": "passed",
+    "sql_steps": "passed",
+    "checkout_evaluation_steps": "failed",
+    "wheel_and_install_smoke_steps": "skipped"
+  }
 }
